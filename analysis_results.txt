@@ -1,0 +1,49 @@
+Analyzing Stockify...                                           
+
+warning - Duplicate import - lib\data\repositories\user_repository.dart:6:8 - duplicate_import
+warning - Unused import: 'ui/dashboard/dashboard_screen.dart' - lib\main.dart:4:8 - unused_import
+warning - Unused import: 'ui/auth/login_screen.dart' - lib\main.dart:5:8 - unused_import
+   info - 'background' is deprecated and shouldn't be used. Use surface instead. This feature was deprecated after v3.18.0-0.1.pre - lib\main.dart:26:11 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\dashboard\dashboard_screen.dart:183:27 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\dashboard\dashboard_screen.dart:202:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\dashboard\dashboard_screen.dart:227:41 - deprecated_member_use
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\ui\medicines\add_medicine_dialog.dart:153:42 - use_build_context_synchronously
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\ui\medicines\add_medicine_dialog.dart:238:31 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\ui\medicines\add_medicine_dialog.dart:253:31 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\medicines\add_medicine_dialog.dart:300:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\medicines\add_medicine_dialog.dart:302:67 - deprecated_member_use
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary - lib\ui\medicines\medicines_screen.dart:120:36 - invalid_null_aware_operator
+warning - Dead code - lib\ui\medicines\medicines_screen.dart:192:53 - dead_code
+warning - The left operand can't be null, so the right operand is never executed - lib\ui\medicines\medicines_screen.dart:192:56 - dead_null_aware_expression
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\ui\pos\checkout_dialog.dart:138:23 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\ui\pos\checkout_dialog.dart:144:31 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\ui\pos\customer_entry_dialog.dart:74:21 - use_build_context_synchronously
+warning - The declaration '_IncreaseQuantityIntent' isn't referenced - lib\ui\pos\pos_screen.dart:26:7 - unused_element
+warning - The declaration '_DecreaseQuantityIntent' isn't referenced - lib\ui\pos\pos_screen.dart:30:7 - unused_element
+warning - The declaration '_RemoveLastItemIntent' isn't referenced - lib\ui\pos\pos_screen.dart:34:7 - unused_element
+warning - The declaration '_NewCustomerIntent' isn't referenced - lib\ui\pos\pos_screen.dart:38:7 - unused_element
+warning - The value of the field '_isSearchingCustomer' isn't used - lib\ui\pos\pos_screen.dart:60:8 - unused_field
+   info - Don't invoke 'print' in production code - lib\ui\pos\pos_screen.dart:115:9 - avoid_print
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary - lib\ui\pos\pos_screen.dart:180:14 - invalid_null_aware_operator
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary - lib\ui\pos\pos_screen.dart:181:22 - invalid_null_aware_operator
+  error - The method 'clearCart' isn't defined for the type 'CartNotifier' - lib\ui\pos\pos_screen.dart:348:45 - undefined_method
+   info - Statements in an if should be enclosed in a block - lib\ui\pos\pos_screen.dart:421:38 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\ui\pos\pos_screen.dart:422:40 - curly_braces_in_flow_control_structures
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary - lib\ui\pos\pos_screen.dart:506:20 - invalid_null_aware_operator
+warning - The '!' will have no effect because the receiver can't be null - lib\ui\pos\pos_screen.dart:566:51 - unnecessary_non_null_assertion
+warning - Dead code - lib\ui\pos\pos_screen.dart:596:50 - dead_code
+warning - The left operand can't be null, so the right operand is never executed - lib\ui\pos\pos_screen.dart:596:53 - dead_null_aware_expression
+  error - The method 'clearCart' isn't defined for the type 'CartNotifier' - lib\ui\pos\pos_screen.dart:659:31 - undefined_method
+   info - Statements in an if should be enclosed in a block - lib\ui\pos\pos_screen.dart:696:60 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\ui\pos\pos_screen.dart:697:42 - curly_braces_in_flow_control_structures
+warning - Unused import: 'package:printing/printing.dart' - lib\ui\sales\sale_pdf_generator.dart:4:8 - unused_import
+   info - 'Table.fromTextArray' is deprecated and shouldn't be used. Use TableHelper.fromTextArray() instead - lib\ui\sales\sale_pdf_generator.dart:36:15 - deprecated_member_use
+warning - Unused import: 'package:drift/drift.dart' - lib\ui\settings\settings_screen.dart:7:8 - unused_import
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\ui\settings\settings_screen.dart:180:15 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\splash_screen.dart:74:43 - deprecated_member_use
+   info - Don't invoke 'print' in production code - lib\utils\sample_data_importer.dart:12:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\utils\sample_data_importer.dart:17:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\utils\sample_data_importer.dart:224:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\utils\sample_data_importer.dart:232:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\utils\sample_data_importer.dart:236:5 - avoid_print
+

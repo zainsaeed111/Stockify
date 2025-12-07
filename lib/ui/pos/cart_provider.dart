@@ -23,18 +23,30 @@ class CartState {
   final List<CartItem> items;
   final double discount;
   final double taxRate;
+  final Customer? customer; // Customer for this sale
 
-  CartState({this.items = const [], this.discount = 0.0, this.taxRate = 0.0});
+  CartState({
+    this.items = const [],
+    this.discount = 0.0,
+    this.taxRate = 0.0,
+    this.customer,
+  });
 
-  double get subTotal => items.fold(0, (sum, item) => sum + item.total);
+  double get subTotal => items.fold(0.0, (sum, item) => sum + item.total);
   double get taxAmount => subTotal * (taxRate / 100);
   double get grandTotal => (subTotal + taxAmount) - discount;
 
-  CartState copyWith({List<CartItem>? items, double? discount, double? taxRate}) {
+  CartState copyWith({
+    List<CartItem>? items,
+    double? discount,
+    double? taxRate,
+    Customer? customer,
+  }) {
     return CartState(
       items: items ?? this.items,
       discount: discount ?? this.discount,
       taxRate: taxRate ?? this.taxRate,
+      customer: customer ?? this.customer,
     );
   }
 }
@@ -78,6 +90,10 @@ class CartNotifier extends Notifier<CartState> {
 
   void setDiscount(double discount) {
     state = state.copyWith(discount: discount);
+  }
+
+  void setCustomer(Customer? customer) {
+    state = state.copyWith(customer: customer);
   }
 
   void clear() {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:intl/intl.dart';
@@ -22,6 +23,15 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
   late TextEditingController _nameController;
   late TextEditingController _manufacturerController;
   late TextEditingController _minStockController;
+  
+  // Focus Nodes for keyboard navigation
+  late FocusNode _nameFocus;
+  late FocusNode _manufacturerFocus;
+  late FocusNode _minStockFocus;
+  late FocusNode _batchNoFocus;
+  late FocusNode _qtyFocus;
+  late FocusNode _purchasePriceFocus;
+  late FocusNode _salePriceFocus;
   
   // Categories
   String? _selectedMainCategory;
@@ -56,8 +66,91 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
     _purchasePriceController = TextEditingController();
     _salePriceController = TextEditingController();
 
+    // Initialize focus nodes
+    _nameFocus = FocusNode();
+    _manufacturerFocus = FocusNode();
+    _minStockFocus = FocusNode();
+    _batchNoFocus = FocusNode();
+    _qtyFocus = FocusNode();
+    _purchasePriceFocus = FocusNode();
+    _salePriceFocus = FocusNode();
+
     if (widget.medicine == null) {
       _loadLastCategory();
+    }
+    
+    // Auto-focus first field after build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _nameFocus.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _manufacturerController.dispose();
+    _minStockController.dispose();
+    _batchNoController.dispose();
+    _qtyController.dispose();
+    _purchasePriceController.dispose();
+    _salePriceController.dispose();
+    _nameFocus.dispose();
+    _manufacturerFocus.dispose();
+    _minStockFocus.dispose();
+    _batchNoFocus.dispose();
+    _qtyFocus.dispose();
+    _purchasePriceFocus.dispose();
+    _salePriceFocus.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleSubmit() async {
+    if (_formKey.currentState!.validate()) {
+      final repo = ref.read(medicineRepositoryProvider);
+      final settingsRepo = ref.read(settingsRepositoryProvider);
+      
+      // Save category preference
+      if (_selectedMainCategory != null) {
+        await settingsRepo.saveSetting('last_main_category', _selectedMainCategory!);
+      }
+      if (_selectedSubCategory != null) {
+        await settingsRepo.saveSetting('last_sub_category', _selectedSubCategory!);
+      }
+
+      final isEditing = widget.medicine != null;
+      if (isEditing) {
+        await repo.updateMedicine(widget.medicine!.copyWith(
+          name: _nameController.text,
+          mainCategory: _selectedMainCategory ?? 'Medicine',
+          subCategory: drift.Value(_selectedSubCategory),
+          manufacturer: drift.Value(_manufacturerController.text),
+          minStock: int.tryParse(_minStockController.text) ?? 10,
+        ));
+      } else {
+        // Add Medicine
+        final medId = await repo.addMedicine(MedicinesCompanion(
+          name: drift.Value(_nameController.text),
+          mainCategory: drift.Value(_selectedMainCategory ?? 'Medicine'),
+          subCategory: drift.Value(_selectedSubCategory),
+          manufacturer: drift.Value(_manufacturerController.text),
+          minStock: drift.Value(int.tryParse(_minStockController.text) ?? 10),
+          code: drift.Value(DateTime.now().millisecondsSinceEpoch.toString()), // Auto-generate code
+        ));
+        
+        // Add Initial Batch if details provided
+        if (_batchNoController.text.isNotEmpty) {
+          await repo.addBatch(BatchesCompanion(
+            medicineId: drift.Value(medId),
+            batchNumber: drift.Value(_batchNoController.text),
+            quantity: drift.Value(int.tryParse(_qtyController.text) ?? 0),
+            purchasePrice: drift.Value(double.tryParse(_purchasePriceController.text) ?? 0.0),
+            salePrice: drift.Value(double.tryParse(_salePriceController.text) ?? 0.0),
+            expiryDate: drift.Value(_expiryDate),
+          ));
+        }
+      }
+      
+      if (context.mounted) Navigator.pop(context);
     }
   }
 
@@ -84,40 +177,59 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
   Widget build(BuildContext context) {
     final isEditing = widget.medicine != null;
 
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        width: 600,
-        padding: const EdgeInsets.all(24),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    isEditing ? 'Edit Product' : 'Add New Product',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.teal),
-                  ),
-                  IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close))
-                ],
-              ),
-              const Divider(height: 30),
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildSectionHeader('Product Details'),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _nameController,
-                        decoration: const InputDecoration(labelText: 'Product Name', prefixIcon: Icon(Icons.shopping_bag)),
-                        validator: (v) => v!.isEmpty ? 'Required' : null,
-                      ),
+    return Shortcuts(
+      shortcuts: {
+        LogicalKeySet(LogicalKeyboardKey.enter): _SubmitIntent(),
+        LogicalKeySet(LogicalKeyboardKey.escape): _CancelIntent(),
+      },
+      child: Actions(
+        actions: {
+          _SubmitIntent: CallbackAction<_SubmitIntent>(onInvoke: (_) => _handleSubmit()),
+          _CancelIntent: CallbackAction<_CancelIntent>(onInvoke: (_) => Navigator.pop(context)),
+        },
+        child: Focus(
+          autofocus: true,
+          child: Dialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: Container(
+              width: 600,
+              padding: const EdgeInsets.all(24),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          isEditing ? 'Edit Product' : 'Add New Product',
+                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.teal),
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.pop(context),
+                          icon: const Icon(Icons.close),
+                          tooltip: 'Close (Esc)',
+                        )
+                      ],
+                    ),
+                    const Divider(height: 30),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildSectionHeader('Product Details'),
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _nameController,
+                              focusNode: _nameFocus,
+                              decoration: const InputDecoration(labelText: 'Product Name', prefixIcon: Icon(Icons.shopping_bag)),
+                              validator: (v) => v!.isEmpty ? 'Required' : null,
+                              textInputAction: TextInputAction.next,
+                              onFieldSubmitted: (_) => _manufacturerFocus.requestFocus(),
+                            ),
                       const SizedBox(height: 16),
                       Row(
                         children: [
@@ -151,13 +263,30 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                       const SizedBox(height: 16),
                       Row(
                         children: [
-                          Expanded(child: TextFormField(controller: _manufacturerController, decoration: const InputDecoration(labelText: 'Manufacturer/Brand', prefixIcon: Icon(Icons.factory)))),
+                          Expanded(
+                            child: TextFormField(
+                              controller: _manufacturerController,
+                              focusNode: _manufacturerFocus,
+                              decoration: const InputDecoration(labelText: 'Manufacturer/Brand', prefixIcon: Icon(Icons.factory)),
+                              textInputAction: TextInputAction.next,
+                              onFieldSubmitted: (_) => _minStockFocus.requestFocus(),
+                            ),
+                          ),
                           const SizedBox(width: 16),
-                          Expanded(child: TextFormField(
-                            controller: _minStockController,
-                            decoration: const InputDecoration(labelText: 'Low Stock Alert', prefixIcon: Icon(Icons.warning_amber)),
-                            keyboardType: TextInputType.number,
-                          )),
+                          Expanded(
+                            child: TextFormField(
+                              controller: _minStockController,
+                              focusNode: _minStockFocus,
+                              decoration: const InputDecoration(labelText: 'Low Stock Alert', prefixIcon: Icon(Icons.warning_amber)),
+                              keyboardType: TextInputType.number,
+                              textInputAction: TextInputAction.next,
+                              onFieldSubmitted: (_) {
+                                if (!isEditing) {
+                                  _batchNoFocus.requestFocus();
+                                }
+                              },
+                            ),
+                          ),
                         ],
                       ),
                       
@@ -176,17 +305,52 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                             children: [
                               Row(
                                 children: [
-                                  Expanded(child: TextFormField(controller: _batchNoController, decoration: const InputDecoration(labelText: 'Batch Number', prefixIcon: Icon(Icons.qr_code)))),
+                                  Expanded(
+                                    child: TextFormField(
+                                      controller: _batchNoController,
+                                      focusNode: _batchNoFocus,
+                                      decoration: const InputDecoration(labelText: 'Batch Number', prefixIcon: Icon(Icons.qr_code)),
+                                      textInputAction: TextInputAction.next,
+                                      onFieldSubmitted: (_) => _qtyFocus.requestFocus(),
+                                    ),
+                                  ),
                                   const SizedBox(width: 16),
-                                  Expanded(child: TextFormField(controller: _qtyController, decoration: const InputDecoration(labelText: 'Quantity', prefixIcon: Icon(Icons.numbers)), keyboardType: TextInputType.number)),
+                                  Expanded(
+                                    child: TextFormField(
+                                      controller: _qtyController,
+                                      focusNode: _qtyFocus,
+                                      decoration: const InputDecoration(labelText: 'Quantity', prefixIcon: Icon(Icons.numbers)),
+                                      keyboardType: TextInputType.number,
+                                      textInputAction: TextInputAction.next,
+                                      onFieldSubmitted: (_) => _purchasePriceFocus.requestFocus(),
+                                    ),
+                                  ),
                                 ],
                               ),
                               const SizedBox(height: 16),
                               Row(
                                 children: [
-                                  Expanded(child: TextFormField(controller: _purchasePriceController, decoration: const InputDecoration(labelText: 'Purchase Price (PKR)', prefixIcon: Icon(Icons.attach_money)), keyboardType: TextInputType.number)),
+                                  Expanded(
+                                    child: TextFormField(
+                                      controller: _purchasePriceController,
+                                      focusNode: _purchasePriceFocus,
+                                      decoration: const InputDecoration(labelText: 'Purchase Price (PKR)', prefixIcon: Icon(Icons.attach_money)),
+                                      keyboardType: TextInputType.number,
+                                      textInputAction: TextInputAction.next,
+                                      onFieldSubmitted: (_) => _salePriceFocus.requestFocus(),
+                                    ),
+                                  ),
                                   const SizedBox(width: 16),
-                                  Expanded(child: TextFormField(controller: _salePriceController, decoration: const InputDecoration(labelText: 'Sale Price (PKR)', prefixIcon: Icon(Icons.price_check)), keyboardType: TextInputType.number)),
+                                  Expanded(
+                                    child: TextFormField(
+                                      controller: _salePriceController,
+                                      focusNode: _salePriceFocus,
+                                      decoration: const InputDecoration(labelText: 'Sale Price (PKR)', prefixIcon: Icon(Icons.price_check)),
+                                      keyboardType: TextInputType.number,
+                                      textInputAction: TextInputAction.done,
+                                      onFieldSubmitted: (_) => _handleSubmit(),
+                                    ),
+                                  ),
                                 ],
                               ),
                               const SizedBox(height: 16),
@@ -223,70 +387,26 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                   OutlinedButton(
                     onPressed: () => Navigator.pop(context),
                     style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16)),
-                    child: const Text('Cancel'),
+                    child: const Text('Cancel (Esc)'),
                   ),
                   const SizedBox(width: 16),
                   ElevatedButton(
-                    onPressed: () async {
-                      if (_formKey.currentState!.validate()) {
-                        final repo = ref.read(medicineRepositoryProvider);
-                        final settingsRepo = ref.read(settingsRepositoryProvider);
-                        
-                        // Save category preference
-                        if (_selectedMainCategory != null) {
-                          await settingsRepo.saveSetting('last_main_category', _selectedMainCategory!);
-                        }
-                        if (_selectedSubCategory != null) {
-                          await settingsRepo.saveSetting('last_sub_category', _selectedSubCategory!);
-                        }
-
-                        if (isEditing) {
-                          await repo.updateMedicine(widget.medicine!.copyWith(
-                            name: _nameController.text,
-                            mainCategory: _selectedMainCategory ?? 'Medicine',
-                            subCategory: drift.Value(_selectedSubCategory),
-                            manufacturer: drift.Value(_manufacturerController.text),
-                            minStock: int.tryParse(_minStockController.text) ?? 10,
-                          ));
-                        } else {
-                          // Add Medicine
-                          final medId = await repo.addMedicine(MedicinesCompanion(
-                            name: drift.Value(_nameController.text),
-                            mainCategory: drift.Value(_selectedMainCategory ?? 'Medicine'),
-                            subCategory: drift.Value(_selectedSubCategory),
-                            manufacturer: drift.Value(_manufacturerController.text),
-                            minStock: drift.Value(int.tryParse(_minStockController.text) ?? 10),
-                            code: drift.Value(DateTime.now().millisecondsSinceEpoch.toString()), // Auto-generate code
-                          ));
-                          
-                          // Add Initial Batch if details provided
-                          if (_batchNoController.text.isNotEmpty) {
-                            await repo.addBatch(BatchesCompanion(
-                              medicineId: drift.Value(medId),
-                              batchNumber: drift.Value(_batchNoController.text),
-                              quantity: drift.Value(int.tryParse(_qtyController.text) ?? 0),
-                              purchasePrice: drift.Value(double.tryParse(_purchasePriceController.text) ?? 0.0),
-                              salePrice: drift.Value(double.tryParse(_salePriceController.text) ?? 0.0),
-                              expiryDate: drift.Value(_expiryDate),
-                            ));
-                          }
-                        }
-                        
-                        if (context.mounted) Navigator.pop(context);
-                      }
-                    },
+                    onPressed: _handleSubmit,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.teal,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     ),
-                    child: Text(isEditing ? 'Update Product' : 'Save Product'),
+                    child: Text(isEditing ? 'Update Product (Enter)' : 'Save Product (Enter)'),
                   ),
                 ],
               ),
             ],
           ),
+        ),
+      ),
+    ),
         ),
       ),
     );
@@ -301,4 +421,13 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
       ],
     );
   }
+}
+
+// Intent classes for keyboard shortcuts
+class _SubmitIntent extends Intent {
+  const _SubmitIntent();
+}
+
+class _CancelIntent extends Intent {
+  const _CancelIntent();
 }

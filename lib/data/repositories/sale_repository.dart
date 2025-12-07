@@ -1,7 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../database/database.dart';
-import '../database/database.dart';
 
 final saleRepositoryProvider = Provider((ref) => SaleRepository(ref.watch(databaseProvider)));
 

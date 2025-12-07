@@ -51,13 +51,23 @@ class Batches extends Table {
   IntColumn get quantity => integer()(); // Current stock in this batch
 }
 
+// --- Customer Tables ---
+
+@DataClassName('Customer')
+class Customers extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text()(); // Required
+  TextColumn get phoneNumber => text().nullable()(); // Optional but validated if provided
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
 // --- Sales & Billing Tables ---
 
 @DataClassName('Sale')
 class Sales extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get invoiceNumber => text().unique()();
-  // Removed patientId
+  IntColumn get customerId => integer().nullable().references(Customers, #id)(); // Customer who made the purchase
   DateTimeColumn get date => dateTime()();
   RealColumn get subTotal => real()();
   RealColumn get discount => real().withDefault(const Constant(0.0))();
@@ -77,12 +87,12 @@ class SaleItems extends Table {
   RealColumn get total => real()();
 }
 
-@DriftDatabase(tables: [Users, Settings, Medicines, Batches, Sales, SaleItems])
+@DriftDatabase(tables: [Users, Settings, Medicines, Batches, Customers, Sales, SaleItems])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 3; // Bumped version
+  int get schemaVersion => 4; // Bumped version for Customer table and customerId in Sales
 
   @override
   MigrationStrategy get migration {
@@ -92,13 +102,21 @@ class AppDatabase extends _$AppDatabase {
       },
       onUpgrade: (Migrator m, int from, int to) async {
         if (from < 3) {
-          // For dev, we might need to recreate tables or add columns
           // Adding columns to Medicines
           try {
             await m.addColumn(medicines, medicines.mainCategory);
             await m.addColumn(medicines, medicines.subCategory);
           } catch (e) {
             // Columns might already exist if re-running
+          }
+        }
+        if (from < 4) {
+          // Add Customers table and customerId to Sales
+          try {
+            await m.createTable(customers);
+            await m.addColumn(sales, sales.customerId);
+          } catch (e) {
+            // Tables/columns might already exist if re-running
           }
         }
       },

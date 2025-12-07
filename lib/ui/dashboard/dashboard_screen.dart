@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../sales/sales_history_screen.dart';
 import '../medicines/medicines_screen.dart';
@@ -25,58 +26,79 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     const SettingsScreen(),
   ];
 
+  void _navigateToIndex(int index) {
+    if (index >= 0 && index < _screens.length) {
+      setState(() {
+        _selectedIndex = index;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth > 800) {
-          return Scaffold(
-            body: Row(
-              children: [
-                NavigationRail(
-                  selectedIndex: _selectedIndex,
-                  onDestinationSelected: (int index) {
-                    setState(() {
-                      _selectedIndex = index;
-                    });
-                  },
-                  labelType: NavigationRailLabelType.all,
-                  destinations: const [
-                    NavigationRailDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard), label: Text('Dashboard')),
-                    NavigationRailDestination(icon: Icon(Icons.inventory_2_outlined), selectedIcon: Icon(Icons.inventory_2), label: Text('Products')),
-                    NavigationRailDestination(icon: Icon(Icons.point_of_sale_outlined), selectedIcon: Icon(Icons.point_of_sale), label: Text('POS')),
-                    NavigationRailDestination(icon: Icon(Icons.receipt_long_outlined), selectedIcon: Icon(Icons.receipt_long), label: Text('Sales')),
-                    NavigationRailDestination(icon: Icon(Icons.bar_chart_outlined), selectedIcon: Icon(Icons.bar_chart), label: Text('Reports')),
-                    NavigationRailDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: Text('Settings')),
-                  ],
-                ),
-                const VerticalDivider(thickness: 1, width: 1),
-                Expanded(child: _screens[_selectedIndex]),
-              ],
-            ),
-          );
-        } else {
-          return Scaffold(
-            body: _screens[_selectedIndex],
-            bottomNavigationBar: NavigationBar(
-              selectedIndex: _selectedIndex,
-              onDestinationSelected: (int index) {
-                setState(() {
-                  _selectedIndex = index;
-                });
-              },
-              destinations: const [
-                NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard), label: 'Dashboard'),
-                NavigationDestination(icon: Icon(Icons.inventory_2_outlined), selectedIcon: Icon(Icons.inventory_2), label: 'Products'),
-                NavigationDestination(icon: Icon(Icons.point_of_sale_outlined), selectedIcon: Icon(Icons.point_of_sale), label: 'POS'),
-                NavigationDestination(icon: Icon(Icons.receipt_long_outlined), selectedIcon: Icon(Icons.receipt_long), label: 'Sales'),
-                NavigationDestination(icon: Icon(Icons.bar_chart_outlined), selectedIcon: Icon(Icons.bar_chart), label: 'Reports'),
-                NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: 'Settings'),
-              ],
-            ),
-          );
-        }
+    return Shortcuts(
+      shortcuts: {
+        LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.digit1): _NavigateIntent(0),
+        LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.digit2): _NavigateIntent(1),
+        LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.digit3): _NavigateIntent(2),
+        LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.digit4): _NavigateIntent(3),
+        LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.digit5): _NavigateIntent(4),
+        LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.digit6): _NavigateIntent(5),
       },
+      child: Actions(
+        actions: {
+          _NavigateIntent: CallbackAction<_NavigateIntent>(onInvoke: (intent) {
+            _navigateToIndex(intent.index);
+            return null;
+          }),
+        },
+        child: Focus(
+          autofocus: true,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth > 800) {
+                return Scaffold(
+                  body: Row(
+                    children: [
+                      NavigationRail(
+                        selectedIndex: _selectedIndex,
+                        onDestinationSelected: _navigateToIndex,
+                        labelType: NavigationRailLabelType.all,
+                        destinations: const [
+                          NavigationRailDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard), label: Text('Dashboard (Ctrl+1)')),
+                          NavigationRailDestination(icon: Icon(Icons.inventory_2_outlined), selectedIcon: Icon(Icons.inventory_2), label: Text('Products (Ctrl+2)')),
+                          NavigationRailDestination(icon: Icon(Icons.point_of_sale_outlined), selectedIcon: Icon(Icons.point_of_sale), label: Text('POS (Ctrl+3)')),
+                          NavigationRailDestination(icon: Icon(Icons.receipt_long_outlined), selectedIcon: Icon(Icons.receipt_long), label: Text('Sales (Ctrl+4)')),
+                          NavigationRailDestination(icon: Icon(Icons.bar_chart_outlined), selectedIcon: Icon(Icons.bar_chart), label: Text('Reports (Ctrl+5)')),
+                          NavigationRailDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: Text('Settings (Ctrl+6)')),
+                        ],
+                      ),
+                      const VerticalDivider(thickness: 1, width: 1),
+                      Expanded(child: _screens[_selectedIndex]),
+                    ],
+                  ),
+                );
+              } else {
+                return Scaffold(
+                  body: _screens[_selectedIndex],
+                  bottomNavigationBar: NavigationBar(
+                    selectedIndex: _selectedIndex,
+                    onDestinationSelected: _navigateToIndex,
+                    destinations: const [
+                      NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard), label: 'Dashboard'),
+                      NavigationDestination(icon: Icon(Icons.inventory_2_outlined), selectedIcon: Icon(Icons.inventory_2), label: 'Products'),
+                      NavigationDestination(icon: Icon(Icons.point_of_sale_outlined), selectedIcon: Icon(Icons.point_of_sale), label: 'POS'),
+                      NavigationDestination(icon: Icon(Icons.receipt_long_outlined), selectedIcon: Icon(Icons.receipt_long), label: 'Sales'),
+                      NavigationDestination(icon: Icon(Icons.bar_chart_outlined), selectedIcon: Icon(Icons.bar_chart), label: 'Reports'),
+                      NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: 'Settings'),
+                    ],
+                  ),
+                );
+              }
+            },
+          ),
+        ),
+      ),
     );
   }
 }
@@ -213,4 +235,10 @@ class _DashboardHome extends StatelessWidget {
       ),
     );
   }
+}
+
+// Intent class for navigation shortcuts
+class _NavigateIntent extends Intent {
+  final int index;
+  const _NavigateIntent(this.index);
 }

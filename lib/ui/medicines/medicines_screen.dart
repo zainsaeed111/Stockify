@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:io';
 import 'dart:convert';
@@ -18,45 +19,94 @@ class MedicinesScreen extends ConsumerStatefulWidget {
 
 class _MedicinesScreenState extends ConsumerState<MedicinesScreen> {
   String _searchQuery = '';
+  final FocusNode _searchFocus = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    // Auto-focus search field when screen loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _searchFocus.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchFocus.dispose();
+    super.dispose();
+  }
+
+  void _handleAddProduct() {
+    showDialog(
+      context: context,
+      builder: (context) => const AddProductDialog(),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final medicineRepo = ref.watch(medicineRepositoryProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Products Management'),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: FloatingActionButton.small(
-              heroTag: 'import',
-              onPressed: () => _importCsv(context, ref),
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.teal,
-              child: const Icon(Icons.upload_file),
+    return Shortcuts(
+      shortcuts: {
+        LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyF): _FocusSearchIntent(),
+        LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyN): _AddProductIntent(),
+        LogicalKeySet(LogicalKeyboardKey.escape): _ClearSearchIntent(),
+      },
+      child: Actions(
+        actions: {
+          _FocusSearchIntent: CallbackAction<_FocusSearchIntent>(onInvoke: (_) {
+            _searchFocus.requestFocus();
+            return null;
+          }),
+          _AddProductIntent: CallbackAction<_AddProductIntent>(onInvoke: (_) {
+            _handleAddProduct();
+            return null;
+          }),
+          _ClearSearchIntent: CallbackAction<_ClearSearchIntent>(onInvoke: (_) {
+            setState(() => _searchQuery = '');
+            _searchFocus.requestFocus();
+            return null;
+          }),
+        },
+        child: Focus(
+          autofocus: true,
+          child: Scaffold(
+            appBar: AppBar(
+              title: const Text('Products Management'),
+              actions: [
+                Padding(
+                  padding: const EdgeInsets.only(right: 16.0),
+                  child: FloatingActionButton.small(
+                    heroTag: 'import',
+                    onPressed: () => _importCsv(context, ref),
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.teal,
+                    child: const Icon(Icons.upload_file),
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Search Bar
-          Container(
-            padding: const EdgeInsets.all(16),
-            color: Colors.teal,
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Search Products...',
-                prefixIcon: const Icon(Icons.search),
-                fillColor: Colors.white,
-                filled: true,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(30), borderSide: BorderSide.none),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-              ),
-              onChanged: (val) => setState(() => _searchQuery = val),
-            ),
-          ),
+            body: Column(
+              children: [
+                // Search Bar
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  color: Colors.teal,
+                  child: TextField(
+                    focusNode: _searchFocus,
+                    decoration: InputDecoration(
+                      hintText: 'Search Products... (Ctrl+F)',
+                      prefixIcon: const Icon(Icons.search),
+                      fillColor: Colors.white,
+                      filled: true,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(30), borderSide: BorderSide.none),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                    ),
+                    onChanged: (val) => setState(() => _searchQuery = val),
+                    textInputAction: TextInputAction.search,
+                  ),
+                ),
           Expanded(
             child: StreamBuilder<List<Medicine>>(
               stream: medicineRepo.watchAllMedicines(),
@@ -98,17 +148,15 @@ class _MedicinesScreenState extends ConsumerState<MedicinesScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: 'add',
-        onPressed: () {
-          showDialog(
-            context: context,
-            builder: (context) => const AddProductDialog(),
-          );
-        },
-        icon: const Icon(Icons.add),
-        label: const Text('Add Product'),
-        backgroundColor: Colors.teal,
+            floatingActionButton: FloatingActionButton.extended(
+              heroTag: 'add',
+              onPressed: _handleAddProduct,
+              icon: const Icon(Icons.add),
+              label: const Text('Add Product (Ctrl+N)'),
+              backgroundColor: Colors.teal,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -265,4 +313,17 @@ class _MedicinesScreenState extends ConsumerState<MedicinesScreen> {
       }
     }
   }
+}
+
+// Intent classes for keyboard shortcuts
+class _FocusSearchIntent extends Intent {
+  const _FocusSearchIntent();
+}
+
+class _AddProductIntent extends Intent {
+  const _AddProductIntent();
+}
+
+class _ClearSearchIntent extends Intent {
+  const _ClearSearchIntent();
 }
