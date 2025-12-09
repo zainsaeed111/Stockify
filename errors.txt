@@ -1,0 +1,80 @@
+Analyzing Stockify...                                           
+
+warning - Duplicate import - lib\data\repositories\user_repository.dart:6:8 - duplicate_import
+warning - Unused import: 'ui/dashboard/dashboard_screen.dart' - lib\main.dart:4:8 - unused_import
+warning - Unused import: 'ui/auth/login_screen.dart' - lib\main.dart:5:8 - unused_import
+   info - 'background' is deprecated and shouldn't be used. Use surface instead. This feature was deprecated after v3.18.0-0.1.pre - lib\main.dart:26:11 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\dashboard\dashboard_screen.dart:183:27 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\dashboard\dashboard_screen.dart:202:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\dashboard\dashboard_screen.dart:227:41 - deprecated_member_use
+  error - Target of URI doesn't exist: '../../data/repositories/patient_repository.dart' - lib\ui\invoices\create_invoice_screen.dart:4:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../data/repositories/invoice_repository.dart' - lib\ui\invoices\create_invoice_screen.dart:5:8 - uri_does_not_exist
+  error - Undefined class 'Patient' - lib\ui\invoices\create_invoice_screen.dart:16:3 - undefined_class
+  error - The name 'InvoiceItemsCompanion' isn't a type, so it can't be used as a type argument - lib\ui\invoices\create_invoice_screen.dart:17:14 - non_type_as_type_argument
+  error - The property 'cost' can't be unconditionally accessed because the receiver can be 'null' - lib\ui\invoices\create_invoice_screen.dart:25:58 - unchecked_use_of_nullable_value
+  error - The property 'quantity' can't be unconditionally accessed because the receiver can be 'null' - lib\ui\invoices\create_invoice_screen.dart:25:76 - unchecked_use_of_nullable_value
+  error - Undefined name 'patientRepositoryProvider' - lib\ui\invoices\create_invoice_screen.dart:31:35 - undefined_identifier
+  error - The name 'Patient' isn't a type, so it can't be used as a type argument - lib\ui\invoices\create_invoice_screen.dart:42:32 - non_type_as_type_argument
+  error - The name 'Patient' isn't a type, so it can't be used as a type argument - lib\ui\invoices\create_invoice_screen.dart:46:48 - non_type_as_type_argument
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\ui\invoices\create_invoice_screen.dart:48:19 - deprecated_member_use
+  error - The property 'name' can't be unconditionally accessed because the receiver can be 'null' - lib\ui\invoices\create_invoice_screen.dart:50:69 - unchecked_use_of_nullable_value
+  error - Undefined name 'invoiceRepositoryProvider' - lib\ui\invoices\create_invoice_screen.dart:88:52 - undefined_identifier
+  error - The method 'ServicesCompanion' isn't defined for the type '_CreateInvoiceScreenState' - lib\ui\invoices\create_invoice_screen.dart:89:46 - undefined_method
+  error - The method 'InvoiceItemsCompanion' isn't defined for the type '_CreateInvoiceScreenState' - lib\ui\invoices\create_invoice_screen.dart:94:38 - undefined_method
+  error - Undefined name 'invoiceRepositoryProvider' - lib\ui\invoices\create_invoice_screen.dart:144:48 - undefined_identifier
+  error - The method 'InvoicesCompanion' isn't defined for the type '_CreateInvoiceScreenState' - lib\ui\invoices\create_invoice_screen.dart:145:35 - undefined_method
+  error - Target of URI doesn't exist: '../../data/repositories/invoice_repository.dart' - lib\ui\invoices\invoice_screen.dart:4:8 - uri_does_not_exist
+  error - Undefined name 'invoiceRepositoryProvider' - lib\ui\invoices\invoice_screen.dart:14:35 - undefined_identifier
+  error - The name 'Invoice' isn't a type, so it can't be used as a type argument - lib\ui\invoices\invoice_screen.dart:29:32 - non_type_as_type_argument
+  error - Target of URI doesn't exist: '../../data/repositories/invoice_repository.dart' - lib\ui\invoices\pdf_preview_screen.dart:8:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../data/repositories/patient_repository.dart' - lib\ui\invoices\pdf_preview_screen.dart:9:8 - uri_does_not_exist
+  error - Undefined name 'invoiceRepositoryProvider' - lib\ui\invoices\pdf_preview_screen.dart:19:35 - undefined_identifier
+  error - Undefined name 'patientRepositoryProvider' - lib\ui\invoices\pdf_preview_screen.dart:20:35 - undefined_identifier
+  error - Undefined class 'Invoice' - lib\ui\invoices\pdf_preview_screen.dart:44:5 - undefined_class
+  error - Undefined class 'Patient' - lib\ui\invoices\pdf_preview_screen.dart:45:5 - undefined_class
+  error - The name 'InvoiceItem' isn't a type, so it can't be used as a type argument - lib\ui\invoices\pdf_preview_screen.dart:46:10 - non_type_as_type_argument
+  error - The name 'Service' isn't a type, so it can't be used as a type argument - lib\ui\invoices\pdf_preview_screen.dart:47:10 - non_type_as_type_argument
+   info - 'Table.fromTextArray' is deprecated and shouldn't be used. Use TableHelper.fromTextArray() instead - lib\ui\invoices\pdf_preview_screen.dart:92:15 - deprecated_member_use
+  error - The property 'id' can't be unconditionally accessed because the receiver can be 'null' - lib\ui\invoices\pdf_preview_screen.dart:96:68 - unchecked_use_of_nullable_value
+  error - The property 'serviceId' can't be unconditionally accessed because the receiver can be 'null' - lib\ui\invoices\pdf_preview_screen.dart:96:79 - unchecked_use_of_nullable_value
+  error - The name 'Service' isn't a class - lib\ui\invoices\pdf_preview_screen.dart:96:110 - creation_with_non_type
+  error - The property 'quantity' can't be unconditionally accessed because the receiver can be 'null' - lib\ui\invoices\pdf_preview_screen.dart:99:26 - unchecked_use_of_nullable_value
+  error - The property 'cost' can't be unconditionally accessed because the receiver can be 'null' - lib\ui\invoices\pdf_preview_screen.dart:100:31 - unchecked_use_of_nullable_value
+  error - The property 'cost' can't be unconditionally accessed because the receiver can be 'null' - lib\ui\invoices\pdf_preview_screen.dart:101:32 - unchecked_use_of_nullable_value
+  error - The property 'quantity' can't be unconditionally accessed because the receiver can be 'null' - lib\ui\invoices\pdf_preview_screen.dart:101:44 - unchecked_use_of_nullable_value
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\ui\medicines\add_medicine_dialog.dart:153:42 - use_build_context_synchronously
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\ui\medicines\add_medicine_dialog.dart:238:31 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\ui\medicines\add_medicine_dialog.dart:253:31 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\medicines\add_medicine_dialog.dart:300:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\medicines\add_medicine_dialog.dart:302:67 - deprecated_member_use
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary - lib\ui\medicines\medicines_screen.dart:120:36 - invalid_null_aware_operator
+warning - Dead code - lib\ui\medicines\medicines_screen.dart:192:53 - dead_code
+warning - The left operand can't be null, so the right operand is never executed - lib\ui\medicines\medicines_screen.dart:192:56 - dead_null_aware_expression
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\ui\pos\checkout_dialog.dart:138:23 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\ui\pos\checkout_dialog.dart:144:31 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\ui\pos\customer_entry_dialog.dart:74:21 - use_build_context_synchronously
+warning - The value of the field '_isSearchingCustomer' isn't used - lib\ui\pos\pos_screen.dart:59:8 - unused_field
+   info - Don't invoke 'print' in production code - lib\ui\pos\pos_screen.dart:110:9 - avoid_print
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary - lib\ui\pos\pos_screen.dart:222:14 - invalid_null_aware_operator
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary - lib\ui\pos\pos_screen.dart:223:22 - invalid_null_aware_operator
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\pos\pos_screen.dart:575:47 - deprecated_member_use
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary - lib\ui\pos\pos_screen.dart:648:46 - invalid_null_aware_operator
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary - lib\ui\pos\pos_screen.dart:649:54 - invalid_null_aware_operator
+warning - The '!' will have no effect because the receiver can't be null - lib\ui\pos\pos_screen.dart:709:91 - unnecessary_non_null_assertion
+warning - Dead code - lib\ui\pos\pos_screen.dart:739:85 - dead_code
+warning - The left operand can't be null, so the right operand is never executed - lib\ui\pos\pos_screen.dart:739:88 - dead_null_aware_expression
+warning - Unused import: 'package:printing/printing.dart' - lib\ui\sales\sale_pdf_generator.dart:4:8 - unused_import
+   info - 'Table.fromTextArray' is deprecated and shouldn't be used. Use TableHelper.fromTextArray() instead - lib\ui\sales\sale_pdf_generator.dart:36:15 - deprecated_member_use
+warning - Unused import: 'package:drift/drift.dart' - lib\ui\settings\settings_screen.dart:7:8 - unused_import
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\ui\settings\settings_screen.dart:180:15 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\splash_screen.dart:74:43 - deprecated_member_use
+   info - Don't invoke 'print' in production code - lib\utils\sample_data_importer.dart:12:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\utils\sample_data_importer.dart:19:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\utils\sample_data_importer.dart:23:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\utils\sample_data_importer.dart:137:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\utils\sample_data_importer.dart:229:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\utils\sample_data_importer.dart:475:5 - avoid_print
+   info - The imported package 'testproject' isn't a dependency of the importing package - test\widget_test.dart:11:8 - depend_on_referenced_packages
+  error - Target of URI doesn't exist: 'package:testproject/main.dart' - test\widget_test.dart:11:8 - uri_does_not_exist
+  error - The name 'MyApp' isn't a class - test\widget_test.dart:16:35 - creation_with_non_type
+
