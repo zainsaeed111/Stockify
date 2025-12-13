@@ -6,6 +6,8 @@ import '../medicines/medicines_screen.dart';
 import '../pos/pos_screen.dart';
 import '../reports/reports_screen.dart';
 import '../settings/settings_screen.dart';
+import '../auth/login_screen.dart';
+import '../../data/providers/current_shop_provider.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -32,6 +34,40 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         _selectedIndex = index;
       });
     }
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.logout, color: Colors.red),
+            SizedBox(width: 8),
+            Text('Logout'),
+          ],
+        ),
+        content: const Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () {
+              Navigator.pop(ctx);
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+                (route) => false,
+              );
+            },
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -64,6 +100,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         selectedIndex: _selectedIndex,
                         onDestinationSelected: _navigateToIndex,
                         labelType: NavigationRailLabelType.all,
+                        trailing: Expanded(
+                          child: Align(
+                            alignment: Alignment.bottomCenter,
+                            child: Padding(
+                              padding: const EdgeInsets.only(bottom: 20),
+                              child: IconButton(
+                                icon: const Icon(Icons.logout, color: Colors.red),
+                                tooltip: 'Logout',
+                                onPressed: () => _showLogoutDialog(context),
+                              ),
+                            ),
+                          ),
+                        ),
                         destinations: const [
                           NavigationRailDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard), label: Text('Dashboard (Ctrl+1)')),
                           NavigationRailDestination(icon: Icon(Icons.inventory_2_outlined), selectedIcon: Icon(Icons.inventory_2), label: Text('Products (Ctrl+2)')),
@@ -103,14 +152,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 }
 
-class _DashboardHome extends StatelessWidget {
+class _DashboardHome extends ConsumerWidget {
   const _DashboardHome();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final businessData = ref.watch(currentShopProvider);
+    final businessName = businessData?['shopName'] ?? 'Stockify';
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Pharmacy Dashboard'),
+        title: Text(businessName),
         centerTitle: false,
         elevation: 0,
         backgroundColor: Colors.transparent,

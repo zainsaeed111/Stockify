@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' as drift;
 import '../../data/repositories/sale_repository.dart';
+import '../../data/repositories/medicine_repository.dart';
+import '../../data/providers/current_shop_provider.dart';
 import '../../data/database/database.dart';
 import 'package:printing/printing.dart';
 import '../sales/sale_pdf_generator.dart';
@@ -75,6 +77,8 @@ class _CheckoutDialogState extends ConsumerState<CheckoutDialog> {
     
     try {
       final saleRepo = ref.read(saleRepositoryProvider);
+      final medicineRepo = ref.read(medicineRepositoryProvider);
+      final shopData = ref.read(currentShopProvider);
       
       // Ensure customer is saved
       if (cart.customer == null) {
@@ -105,7 +109,12 @@ class _CheckoutDialogState extends ConsumerState<CheckoutDialog> {
         )).toList(),
       );
       
-      // Generate PDF
+      // DEDUCT STOCK for each item sold
+      for (final item in cart.items) {
+        await medicineRepo.updateStock(item.batch.id, -item.quantity);
+      }
+      
+      // Generate PDF with shop data
       final pdfBytes = await SalePdfGenerator.generateSalePdf(
         sale: Sale(
           id: saleId,
@@ -129,6 +138,7 @@ class _CheckoutDialogState extends ConsumerState<CheckoutDialog> {
         )).toList(),
         medicines: cart.items.map((i) => i.medicine).toList(),
         customer: cart.customer,
+        shopData: shopData, // Pass shop data for receipt header
       );
 
       // Clear Cart

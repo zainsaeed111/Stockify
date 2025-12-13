@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "823797210476",
+    "project_id": "zainsaeed-ff6ec",
+    "storage_bucket": "zainsaeed-ff6ec.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:823797210476:android:f05d5cc3aa087b2fad2749",
+        "android_client_info": {
+          "package_name": "com.example.authenticationbyzain"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAXwV3WZ7ll4h_LENfRZ10PjJ63A-kCYW8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:823797210476:android:4a07bb5b31e71f19ad2749",
+        "android_client_info": {
+          "package_name": "com.example.stockify"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAXwV3WZ7ll4h_LENfRZ10PjJ63A-kCYW8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

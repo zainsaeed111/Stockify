@@ -1,11 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'ui/dashboard/dashboard_screen.dart';
 import 'ui/auth/login_screen.dart';
 import 'ui/splash_screen.dart';
+import 'firebase_options.dart'; // Ensure this file is generated via 'flutterfire configure'
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (e) {
+    print("Firebase Initialization Error: $e");
+    // Continue running app even if Firebase fails (for dev/testing without config)
+  }
   runApp(const ProviderScope(child: MyApp()));
 }
 

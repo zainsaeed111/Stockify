@@ -50,8 +50,8 @@ class _PosScreenState extends ConsumerState<PosScreen> {
   
   // Selection State
   int _selectedProductIndex = 0;
-  int _crossAxisCount = 4; // Default, updated by LayoutBuilder
-  
+  final int _crossAxisCount = 1; // List view always has 1 "column" effectively for navigation logic
+
   // Payment State
   String _paymentMode = 'Cash'; // Cash, Card, Online
   double _changeReturn = 0.0;
@@ -131,17 +131,28 @@ class _PosScreenState extends ConsumerState<PosScreen> {
 
   void _scrollToSelected() {
     if (!_productGridController.hasClients) return;
-    // Basic auto-scroll logic (approximate row height ~200)
-    // A more precise way requires specific item contexts, but this is usually sufficient for grid
-    final row = (_selectedProductIndex / _crossAxisCount).floor();
-    final offset = row * 150.0; // Approx card height
-    // Don't scroll if already visible (this is simplistic, improves UX slightly)
-    if (offset < _productGridController.offset || offset > _productGridController.offset + _productGridController.position.viewportDimension) {
-        _productGridController.animateTo(
-          offset, 
-          duration: const Duration(milliseconds: 200), 
+    final itemHeight = 72.0; // Approx item height including padding/separator
+    final offset = _selectedProductIndex * itemHeight;
+    // Keep selected item in middle of viewport if possible
+    final viewportHeight = _productGridController.position.viewportDimension;
+    double targetOffset = offset - (viewportHeight / 2) + (itemHeight / 2);
+    
+    if (targetOffset < 0) targetOffset = 0;
+    
+    if (offset < _productGridController.offset || offset > _productGridController.offset + viewportHeight) {
+       _productGridController.animateTo(
+          targetOffset,
+          duration: const Duration(milliseconds: 200),
           curve: Curves.easeOut
-        );
+       );
+    } else {
+       // Also scroll if it's near the edge or the targetOffset is significantly different? 
+       // Simplest for list is just ensuring visibility.
+        if (offset < _productGridController.offset) {
+          _productGridController.animateTo(offset, duration: const Duration(milliseconds: 200), curve: Curves.easeOut);
+        } else if (offset + itemHeight > _productGridController.offset + viewportHeight) {
+          _productGridController.animateTo(offset + itemHeight - viewportHeight, duration: const Duration(milliseconds: 200), curve: Curves.easeOut);
+        }
     }
   }
 
@@ -248,8 +259,8 @@ class _PosScreenState extends ConsumerState<PosScreen> {
             LogicalKeySet(LogicalKeyboardKey.escape): const _ClearSearchIntent(),
             LogicalKeySet(LogicalKeyboardKey.arrowUp): const _NavUpIntent(),
             LogicalKeySet(LogicalKeyboardKey.arrowDown): const _NavDownIntent(),
-            LogicalKeySet(LogicalKeyboardKey.arrowLeft): const _NavLeftIntent(),
-            LogicalKeySet(LogicalKeyboardKey.arrowRight): const _NavRightIntent(),
+            // LogicalKeySet(LogicalKeyboardKey.arrowLeft): const _NavLeftIntent(), // Removed for list view
+            // LogicalKeySet(LogicalKeyboardKey.arrowRight): const _NavRightIntent(), // Removed for list view
             LogicalKeySet(LogicalKeyboardKey.enter): const _SelectProductIntent(),
             LogicalKeySet(LogicalKeyboardKey.numpadEnter): const _SelectProductIntent(),
             // Cart shortcuts
@@ -266,10 +277,10 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                 setState(() { _searchQuery = ''; _selectedProductIndex = 0; });
                 _productSearchFocus.requestFocus(); return null; 
               }),
-              _NavUpIntent: CallbackAction<_NavUpIntent>(onInvoke: (_) { _moveSelection(-_crossAxisCount, filteredMedicines.length); return null; }),
-              _NavDownIntent: CallbackAction<_NavDownIntent>(onInvoke: (_) { _moveSelection(_crossAxisCount, filteredMedicines.length); return null; }),
-              _NavLeftIntent: CallbackAction<_NavLeftIntent>(onInvoke: (_) { _moveSelection(-1, filteredMedicines.length); return null; }),
-              _NavRightIntent: CallbackAction<_NavRightIntent>(onInvoke: (_) { _moveSelection(1, filteredMedicines.length); return null; }),
+              _NavUpIntent: CallbackAction<_NavUpIntent>(onInvoke: (_) { _moveSelection(-1, filteredMedicines.length); return null; }),
+              _NavDownIntent: CallbackAction<_NavDownIntent>(onInvoke: (_) { _moveSelection(1, filteredMedicines.length); return null; }),
+              // _NavLeftIntent: CallbackAction<_NavLeftIntent>(onInvoke: (_) { _moveSelection(-1, filteredMedicines.length); return null; }),
+              // _NavRightIntent: CallbackAction<_NavRightIntent>(onInvoke: (_) { _moveSelection(1, filteredMedicines.length); return null; }),
               _SelectProductIntent: CallbackAction<_SelectProductIntent>(onInvoke: (_) { 
                 // Only trigger if we are focused on search/grid, not amount field
                 if (!_amountReceivedFocus.hasFocus) {
@@ -298,7 +309,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                             child: Column(
                               children: [
                                 _buildSearchSection(),
-                                Expanded(child: _buildProductGrid(filteredMedicines, medicineRepo, cartNotifier)),
+                                Expanded(child: _buildProductList(filteredMedicines, medicineRepo, cartNotifier)),
                               ],
                             ),
                           ),
@@ -438,42 +449,39 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     );
   }
 
-  Widget _buildProductGrid(List<Medicine> medicines, MedicineRepository repo, CartNotifier notifier) {
+  Widget _buildProductList(List<Medicine> medicines, MedicineRepository repo, CartNotifier notifier) {
         if (medicines.isEmpty) {
           return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.inventory_2_outlined, size: 64, color: Colors.grey.shade300), const SizedBox(height: 16), Text('No products found', style: TextStyle(color: Colors.grey.shade500))]));
         }
 
-        return LayoutBuilder(
-          builder: (context, constraints) {
-             final count = (constraints.maxWidth / 160).floor().clamp(2, 6);
-             if (_crossAxisCount != count) {
-                 WidgetsBinding.instance.addPostFrameCallback((_) => _crossAxisCount = count);
-             }
-
-             return GridView.builder(
-               controller: _productGridController,
-               padding: const EdgeInsets.all(12),
-               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                 crossAxisCount: count,
-                 childAspectRatio: 0.85,
-                 crossAxisSpacing: 10,
-                 mainAxisSpacing: 10,
-               ),
-               itemCount: medicines.length,
-               itemBuilder: (context, index) {
-                 final isSelected = index == _selectedProductIndex;
-                 return _buildProductCard(medicines[index], repo, notifier, isSelected);
-               },
-             );
+        return ListView.separated(
+          controller: _productGridController,
+          padding: const EdgeInsets.all(12),
+          itemCount: medicines.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 8),
+          itemBuilder: (context, index) {
+            final isSelected = index == _selectedProductIndex;
+            return _buildProductListItem(medicines[index], repo, notifier, isSelected);
           },
         );
   }
 
-  Widget _buildProductCard(Medicine medicine, MedicineRepository repo, CartNotifier notifier, bool isSelected) {
+  Widget _buildProductListItem(Medicine medicine, MedicineRepository repo, CartNotifier notifier, bool isSelected) {
     return FutureBuilder<List<Batch>>(
       future: repo.getBatchesForMedicine(medicine.id),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) return const Card(elevation: 0, child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))));
+        // Placeholder while loading stock
+         if (!snapshot.hasData) {
+           return Container(
+             height: 60,
+             decoration: BoxDecoration(
+               color: Colors.white,
+               borderRadius: BorderRadius.circular(8),
+               border: Border.all(color: Colors.grey.shade200),
+             ),
+             child: const Center(child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))),
+           );
+         }
         
         final batches = snapshot.data!;
         final totalStock = batches.fold(0, (sum, b) => sum + b.quantity);
@@ -486,54 +494,84 @@ class _PosScreenState extends ConsumerState<PosScreen> {
             color: Colors.white,
             borderRadius: BorderRadius.circular(8),
             border: isSelected 
-              ? Border.all(color: Colors.teal, width: 3) 
+              ? Border.all(color: Colors.teal, width: 2) 
               : Border.all(color: Colors.grey.shade200),
             boxShadow: isSelected 
-              ? [BoxShadow(color: Colors.teal.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))] 
-              : [const BoxShadow(color: Colors.black12, blurRadius: 2, offset: Offset(0, 1))],
+              ? [BoxShadow(color: Colors.teal.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))] 
+              : [const BoxShadow(color: Colors.black12, blurRadius: 1, offset: Offset(0, 1))],
           ),
           child: Material(
             color: Colors.transparent,
             child: InkWell(
               onTap: hasStock ? () { notifier.addItem(medicine, bestBatch!); } : null,
               borderRadius: BorderRadius.circular(8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                   Expanded(
-                     child: Container(
-                       padding: const EdgeInsets.all(10),
-                       decoration: BoxDecoration(
-                          color: hasStock ? Colors.teal.shade50 : Colors.grey.shade100,
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-                       ),
-                       child: Column(
-                         crossAxisAlignment: CrossAxisAlignment.start,
-                         children: [
-                           Text(medicine.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontWeight: FontWeight.bold, color: hasStock ? Colors.black87 : Colors.grey, fontSize: 13)),
-                           const SizedBox(height: 4),
-                           Text(medicine.mainCategory ?? 'Medicine', style: TextStyle(fontSize: 11, color: hasStock ? Colors.teal.shade700 : Colors.grey)),
-                           const Spacer(),
-                           if (bestBatch != null)
-                              Text('PKR ${bestBatch.salePrice.toStringAsFixed(0)}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: hasStock ? Colors.teal : Colors.grey)),
-                         ],
-                       ),
-                     ),
-                   ),
-                   Container(
-                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                     decoration: const BoxDecoration(
-                       borderRadius: BorderRadius.vertical(bottom: Radius.circular(8)),
-                     ),
-                     child: Row(
-                       children: [
-                         Expanded(child: Text(hasStock ? 'Stock: $totalStock' : 'Out of Stock', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: hasStock ? Colors.green : Colors.red))),
-                         if (hasStock)
-                           if (isSelected) const Icon(Icons.add_shopping_cart, size: 16, color: Colors.teal)
-                       ],
-                     ),
-                   ),
-                ],
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: hasStock ? Colors.teal.withOpacity(0.1) : Colors.grey.shade100,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.medication, 
+                        color: hasStock ? Colors.teal : Colors.grey,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            medicine.name, 
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold, 
+                              fontSize: 15,
+                              color: hasStock ? Colors.black87 : Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                               Text(medicine.mainCategory ?? 'Medicine', style: TextStyle(fontSize: 12, color: hasStock ? Colors.teal.shade700 : Colors.grey)),
+                               if (medicine.code != null) ...[
+                                 Padding(
+                                   padding: const EdgeInsets.symmetric(horizontal: 6), 
+                                   child: Icon(Icons.circle, size: 4, color: Colors.grey.shade400)
+                                 ),
+                                 Text('#${medicine.code}', style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontStyle: FontStyle.italic)),
+                               ]
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        if (bestBatch != null)
+                          Text('PKR ${bestBatch.salePrice.toStringAsFixed(0)}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: hasStock ? Colors.teal : Colors.grey)),
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: hasStock ? Colors.green.shade50 : Colors.red.shade50,
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(color: hasStock ? Colors.green.shade100 : Colors.red.shade100),
+                          ),
+                          child: Text(
+                            hasStock ? '$totalStock in stock' : 'Out of Stock', 
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: hasStock ? Colors.green.shade700 : Colors.red.shade700)
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
