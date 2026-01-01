@@ -26,6 +26,18 @@ class Settings extends Table {
   Set<Column> get primaryKey => {key};
 }
 
+// --- Categories Table ---
+
+@DataClassName('Category')
+class Categories extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text()(); // Category name (required)
+  IntColumn get parentId => integer().nullable()(); // For subcategories - references parent category ID
+  TextColumn get description => text().nullable()(); // Optional description
+  TextColumn get imageUrl => text().nullable()(); // Optional image path/URL
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
 // --- Inventory Tables ---
 
 @DataClassName('Medicine')
@@ -33,8 +45,8 @@ class Medicines extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text()();
   TextColumn get code => text().unique()(); // Barcode/Unique ID
-  TextColumn get mainCategory => text().withDefault(const Constant('Medicine'))(); // Medicine, Inventory, General, Electronics
-  TextColumn get subCategory => text().nullable()(); // Tablet, Syrup, etc.
+  TextColumn get mainCategory => text().withDefault(const Constant('General'))(); // Category name
+  TextColumn get subCategory => text().nullable()(); // Subcategory name
   TextColumn get manufacturer => text().nullable()();
   TextColumn get description => text().nullable()();
   IntColumn get minStock => integer().withDefault(const Constant(10))(); // Low stock alert level
@@ -72,6 +84,7 @@ class Sales extends Table {
   RealColumn get subTotal => real()();
   RealColumn get discount => real().withDefault(const Constant(0.0))();
   RealColumn get tax => real().withDefault(const Constant(0.0))();
+  RealColumn get posFee => real().withDefault(const Constant(0.0))(); // POS Fee column
   RealColumn get grandTotal => real()();
   TextColumn get paymentMethod => text().withDefault(const Constant('Cash'))();
   IntColumn get userId => integer().nullable().references(Users, #id)(); // Who processed the sale
@@ -87,12 +100,12 @@ class SaleItems extends Table {
   RealColumn get total => real()();
 }
 
-@DriftDatabase(tables: [Users, Settings, Medicines, Batches, Customers, Sales, SaleItems])
+@DriftDatabase(tables: [Users, Settings, Categories, Medicines, Batches, Customers, Sales, SaleItems])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 4; // Bumped version for Customer table and customerId in Sales
+  int get schemaVersion => 6; // Added posFee column
 
   @override
   MigrationStrategy get migration {
@@ -117,6 +130,22 @@ class AppDatabase extends _$AppDatabase {
             await m.addColumn(sales, sales.customerId);
           } catch (e) {
             // Tables/columns might already exist if re-running
+          }
+        }
+        if (from < 5) {
+          // Add Categories table
+          try {
+            await m.createTable(categories);
+          } catch (e) {
+            // Table might already exist
+          }
+        }
+        if (from < 6) {
+          // Add posFee to Sales
+          try {
+            await m.addColumn(sales, sales.posFee);
+          } catch (e) {
+            // Column might already exist
           }
         }
       },

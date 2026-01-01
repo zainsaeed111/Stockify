@@ -9,6 +9,8 @@ import '../../utils/sample_data_importer.dart';
 import 'cart_provider.dart';
 import 'checkout_dialog.dart';
 import 'customer_entry_dialog.dart';
+import 'stock_warning_dialog.dart';
+
 
 // Intent classes for keyboard shortcuts
 class _FocusSearchIntent extends Intent { const _FocusSearchIntent(); }
@@ -55,6 +57,9 @@ class _PosScreenState extends ConsumerState<PosScreen> {
   // Payment State
   String _paymentMode = 'Cash'; // Cash, Card, Online
   double _changeReturn = 0.0;
+  
+  // Track products where user chose "Don't show warning again"
+  final Set<int> _dismissedStockWarnings = {};
 
   @override
   void initState() {
@@ -160,35 +165,92 @@ class _PosScreenState extends ConsumerState<PosScreen> {
       if (index < 0 || index >= filteredList.length) return;
       final medicine = filteredList[index];
       
-      // Auto-add logic
       final medicineRepo = ref.read(medicineRepositoryProvider);
       final cartNotifier = ref.read(cartProvider.notifier);
       final batches = await medicineRepo.getBatchesForMedicine(medicine.id);
       
-      final availableBatches = batches.where((b) => b.quantity > 0).toList();
-      if (availableBatches.isNotEmpty) {
-        availableBatches.sort((a, b) => b.expiryDate.compareTo(a.expiryDate));
-        final bestBatch = availableBatches.first;
-        
-        cartNotifier.addItem(medicine, bestBatch);
+      // Calculate total stock across all batches (explicit type to prevent null issues)
+      final totalStock = batches.fold<int>(0, (sum, b) => sum + b.quantity);
+      final alreadyInCart = cartNotifier.getMedicineQuantityInCart(medicine.id);
+      
+      // Find best batch (prefer ones with stock, sorted by expiry)
+      final sortedBatches = List<Batch>.from(batches)
+        ..sort((a, b) {
+          // First prefer batches with stock
+          if (a.quantity > 0 && b.quantity <= 0) return -1;
+          if (b.quantity > 0 && a.quantity <= 0) return 1;
+          // Then sort by expiry date (oldest first to sell first - FEFO)
+          return a.expiryDate.compareTo(b.expiryDate);
+        });
+      
+      if (sortedBatches.isEmpty) {
         if (mounted) {
-          ScaffoldMessenger.of(context).clearSnackBars(); // Prevent stack up
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${medicine.name} added'), 
-              backgroundColor: Colors.teal, 
-              duration: const Duration(milliseconds: 300),
-              behavior: SnackBarBehavior.floating,
-              width: 300,
-            )
+            const SnackBar(content: Text('No batches available for this product'), backgroundColor: Colors.red),
           );
         }
-      } else {
-        if (mounted) {
-           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Out of Stock'), backgroundColor: Colors.red, duration: Duration(seconds: 1)),
-          );
+        return;
+      }
+      
+      final bestBatch = sortedBatches.first;
+      final availableStock = totalStock - alreadyInCart;
+      
+      // Show warning if low stock or out of stock (unless user dismissed for this product)
+      final shouldShowWarning = (availableStock <= 0 || availableStock < medicine.minStock) 
+          && !_dismissedStockWarnings.contains(medicine.id);
+          
+      if (shouldShowWarning) {
+        if (!mounted) return;
+        
+        final result = await StockWarningDialog.show(
+          context,
+          productName: medicine.name,
+          availableStock: totalStock,
+          requestedQuantity: 1,
+          alreadyInCart: alreadyInCart,
+        );
+        
+        if (result == null || !result.proceed) return;
+        
+        // If user checked "Don't show again", add to dismissed set
+        if (result.dontShowAgain) {
+          setState(() {
+            _dismissedStockWarnings.add(medicine.id);
+          });
         }
+      }
+      
+      // Add to cart with stock info
+      cartNotifier.addItem(medicine, bestBatch, totalBatchStock: totalStock);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white, size: 18),
+                const SizedBox(width: 8),
+                Text('${medicine.name} added'),
+                if (availableStock <= 0) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade700,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: const Text('LOW STOCK', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ],
+            ), 
+            backgroundColor: availableStock <= 0 ? Colors.orange.shade700 : Colors.teal, 
+            duration: const Duration(milliseconds: 500),
+            behavior: SnackBarBehavior.floating,
+            width: 350,
+          )
+        );
       }
   }
 
@@ -225,9 +287,28 @@ class _PosScreenState extends ConsumerState<PosScreen> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cart is empty')));
       return;
     }
-    showDialog(context: context, builder: (context) => const CheckoutDialog()).then((_) {
+    
+    // Parse the amount entered on the main screen to pass to the dialog
+    double? initialAmount;
+    if (_amountReceivedController.text.isNotEmpty) {
+      initialAmount = double.tryParse(_amountReceivedController.text.replaceAll('PKR', '').trim());
+    }
+
+    showDialog(
+      context: context, 
+      builder: (context) => CheckoutDialog(
+        initialAmount: initialAmount,
+        initialPaymentMode: _paymentMode,
+      )
+    ).then((_) {
       _amountReceivedController.clear();
-      setState(() { _changeReturn = 0.0; _paymentMode = 'Cash'; });
+      // Reset payment mode and change after checkout
+      setState(() { 
+        _changeReturn = 0.0; 
+        _paymentMode = 'Cash'; 
+        _customerNameController.clear(); // Clear customer field too as cart is cleared
+        _customerPhoneController.clear();
+      });
       _productSearchFocus.requestFocus();
     });
   }
@@ -236,6 +317,17 @@ class _PosScreenState extends ConsumerState<PosScreen> {
   Widget build(BuildContext context) {
     final medicineRepo = ref.watch(medicineRepositoryProvider);
     final cart = ref.watch(cartProvider);
+    
+    // Keep customer name controller in sync with cart state
+    // This handles cases where customer is selected via dialog or cleared
+    if (cart.customer != null && _customerNameController.text != cart.customer!.name) {
+      _customerNameController.text = cart.customer!.name;
+      _customerPhoneController.text = cart.customer!.phoneNumber ?? '';
+    } else if (cart.customer == null && !_customerNameFocus.hasFocus && _customerNameController.text.isNotEmpty) {
+      // Only clear if field doesn't have focus (to allow typing new names)
+       _customerNameController.clear();
+       _customerPhoneController.clear();
+    }
     final cartNotifier = ref.read(cartProvider.notifier);
     
     // Filter medicines first to know the list for navigation
@@ -461,12 +553,17 @@ class _PosScreenState extends ConsumerState<PosScreen> {
           separatorBuilder: (_, __) => const SizedBox(height: 8),
           itemBuilder: (context, index) {
             final isSelected = index == _selectedProductIndex;
-            return _buildProductListItem(medicines[index], repo, notifier, isSelected);
+            return _buildProductListItem(medicines[index], repo, notifier, isSelected, index, medicines);
           },
         );
   }
 
-  Widget _buildProductListItem(Medicine medicine, MedicineRepository repo, CartNotifier notifier, bool isSelected) {
+  Widget _buildProductListItem(Medicine medicine, MedicineRepository repo, CartNotifier notifier, bool isSelected, int index, List<Medicine> allMedicines) {
+    final cart = ref.watch(cartProvider);
+    final inCartQty = cart.items
+        .where((i) => i.medicine.id == medicine.id)
+        .fold<int>(0, (sum, item) => sum + item.quantity);
+    
     return FutureBuilder<List<Batch>>(
       future: repo.getBatchesForMedicine(medicine.id),
       builder: (context, snapshot) {
@@ -484,9 +581,44 @@ class _PosScreenState extends ConsumerState<PosScreen> {
          }
         
         final batches = snapshot.data!;
-        final totalStock = batches.fold(0, (sum, b) => sum + b.quantity);
-        final hasStock = totalStock > 0;
-        final bestBatch = hasStock ? (batches.where((b) => b.quantity > 0).toList()..sort((a,b) => b.expiryDate.compareTo(a.expiryDate))).first : null;
+        final totalStock = batches.fold<int>(0, (sum, b) => sum + b.quantity);
+        final availableStock = totalStock - inCartQty; // Real-time available stock
+        final isLowStock = availableStock > 0 && availableStock < medicine.minStock;
+        final isOutOfStock = availableStock <= 0;
+        final hasAnyStock = totalStock > 0;
+        
+        // Find best batch for pricing display
+        final batchesWithStock = batches.where((b) => b.quantity > 0).toList();
+        final bestBatch = batchesWithStock.isNotEmpty 
+            ? (batchesWithStock..sort((a,b) => a.expiryDate.compareTo(b.expiryDate))).first 
+            : (batches.isNotEmpty ? batches.first : null);
+
+        // Determine stock badge color and text
+        Color badgeColor;
+        Color badgeBgColor;
+        Color badgeBorderColor;
+        String badgeText;
+        IconData? badgeIcon;
+        
+        if (isOutOfStock) {
+          badgeColor = Colors.red.shade700;
+          badgeBgColor = Colors.red.shade50;
+          badgeBorderColor = Colors.red.shade200;
+          badgeText = totalStock <= 0 ? 'Out of Stock' : '$availableStock available';
+          badgeIcon = Icons.warning_amber_rounded;
+        } else if (isLowStock) {
+          badgeColor = Colors.orange.shade700;
+          badgeBgColor = Colors.orange.shade50;
+          badgeBorderColor = Colors.orange.shade200;
+          badgeText = '$availableStock left';
+          badgeIcon = Icons.warning_amber_rounded;
+        } else {
+          badgeColor = Colors.green.shade700;
+          badgeBgColor = Colors.green.shade50;
+          badgeBorderColor = Colors.green.shade200;
+          badgeText = '$availableStock in stock';
+          badgeIcon = null;
+        }
 
         return AnimatedContainer(
           duration: const Duration(milliseconds: 100),
@@ -503,7 +635,8 @@ class _PosScreenState extends ConsumerState<PosScreen> {
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: hasStock ? () { notifier.addItem(medicine, bestBatch!); } : null,
+              // Always allow tap - warning dialog will handle low/zero stock
+              onTap: batches.isNotEmpty ? () => _addProductToIndex(index, allMedicines) : null,
               borderRadius: BorderRadius.circular(8),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -512,12 +645,12 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: hasStock ? Colors.teal.withOpacity(0.1) : Colors.grey.shade100,
+                        color: hasAnyStock ? Colors.teal.withOpacity(0.1) : Colors.grey.shade100,
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         Icons.medication, 
-                        color: hasStock ? Colors.teal : Colors.grey,
+                        color: hasAnyStock ? Colors.teal : Colors.grey,
                         size: 24,
                       ),
                     ),
@@ -531,20 +664,42 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                             style: TextStyle(
                               fontWeight: FontWeight.bold, 
                               fontSize: 15,
-                              color: hasStock ? Colors.black87 : Colors.grey,
+                              color: hasAnyStock ? Colors.black87 : Colors.grey,
                             ),
                           ),
                           const SizedBox(height: 2),
                           Row(
                             children: [
-                               Text(medicine.mainCategory ?? 'Medicine', style: TextStyle(fontSize: 12, color: hasStock ? Colors.teal.shade700 : Colors.grey)),
+                               Text(medicine.mainCategory ?? 'Medicine', style: TextStyle(fontSize: 12, color: hasAnyStock ? Colors.teal.shade700 : Colors.grey)),
                                if (medicine.code != null) ...[
                                  Padding(
                                    padding: const EdgeInsets.symmetric(horizontal: 6), 
                                    child: Icon(Icons.circle, size: 4, color: Colors.grey.shade400)
                                  ),
                                  Text('#${medicine.code}', style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontStyle: FontStyle.italic)),
-                               ]
+                               ],
+                               // Show in-cart indicator
+                               if (inCartQty > 0) ...[
+                                 Padding(
+                                   padding: const EdgeInsets.symmetric(horizontal: 6), 
+                                   child: Icon(Icons.circle, size: 4, color: Colors.grey.shade400)
+                                 ),
+                                 Container(
+                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                   decoration: BoxDecoration(
+                                     color: Colors.blue.shade100,
+                                     borderRadius: BorderRadius.circular(8),
+                                   ),
+                                   child: Row(
+                                     mainAxisSize: MainAxisSize.min,
+                                     children: [
+                                       Icon(Icons.shopping_cart, size: 10, color: Colors.blue.shade700),
+                                       const SizedBox(width: 3),
+                                       Text('$inCartQty', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.blue.shade700)),
+                                     ],
+                                   ),
+                                 ),
+                               ],
                             ],
                           ),
                         ],
@@ -554,18 +709,27 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         if (bestBatch != null)
-                          Text('PKR ${bestBatch.salePrice.toStringAsFixed(0)}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: hasStock ? Colors.teal : Colors.grey)),
+                          Text('PKR ${bestBatch.salePrice.toStringAsFixed(0)}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: hasAnyStock ? Colors.teal : Colors.grey)),
                         const SizedBox(height: 4),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: hasStock ? Colors.green.shade50 : Colors.red.shade50,
+                            color: badgeBgColor,
                             borderRadius: BorderRadius.circular(4),
-                            border: Border.all(color: hasStock ? Colors.green.shade100 : Colors.red.shade100),
+                            border: Border.all(color: badgeBorderColor),
                           ),
-                          child: Text(
-                            hasStock ? '$totalStock in stock' : 'Out of Stock', 
-                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: hasStock ? Colors.green.shade700 : Colors.red.shade700)
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (badgeIcon != null) ...[
+                                Icon(badgeIcon, size: 12, color: badgeColor),
+                                const SizedBox(width: 4),
+                              ],
+                              Text(
+                                badgeText, 
+                                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: badgeColor)
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -579,6 +743,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
       },
     );
   }
+
 
   Widget _buildCartPanel(CartState cart, CartNotifier notifier) {
     return Container(
@@ -608,41 +773,74 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                   separatorBuilder: (_,__) => const Divider(height: 1),
                   itemBuilder: (context, index) {
                     final item = cart.items[index];
+                    final hasWarning = item.hasStockWarning;
+                    
                     return Container(
                       padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 90,
-                            height: 32,
-                            decoration: BoxDecoration(border: Border.all(color: Colors.grey.shade300), borderRadius: BorderRadius.circular(4), color: Colors.white),
-                            child: Row(
-                               children: [
-                                 InkWell(onTap: () { if (item.quantity > 1) notifier.updateQuantity(item.batch.id, item.quantity - 1); else notifier.removeItem(item.batch.id); }, child: const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Icon(Icons.remove, size: 14))),
-                                 Expanded(child: Text('${item.quantity}', textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.bold))),
-                                 InkWell(onTap: () => notifier.updateQuantity(item.batch.id, item.quantity + 1), child: const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Icon(Icons.add, size: 14))),
-                               ],
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
+                      decoration: hasWarning ? BoxDecoration(
+                        color: Colors.orange.shade50,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: Colors.orange.shade200),
+                      ) : null,
+                      child: Padding(
+                        padding: hasWarning ? const EdgeInsets.all(6) : EdgeInsets.zero,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(item.medicine.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                                Text('${item.quantity} x ${item.batch.salePrice.toStringAsFixed(0)}', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                                Container(
+                                  width: 90,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: hasWarning ? Colors.orange.shade300 : Colors.grey.shade300), 
+                                    borderRadius: BorderRadius.circular(4), 
+                                    color: Colors.white,
+                                  ),
+                                  child: Row(
+                                     children: [
+                                       InkWell(onTap: () { if (item.quantity > 1) notifier.updateQuantity(item.batch.id, item.quantity - 1); else notifier.removeItem(item.batch.id); }, child: const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Icon(Icons.remove, size: 14))),
+                                       Expanded(child: Text('${item.quantity}', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, color: hasWarning ? Colors.orange.shade700 : Colors.black87))),
+                                       InkWell(onTap: () => notifier.updateQuantity(item.batch.id, item.quantity + 1), child: const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Icon(Icons.add, size: 14))),
+                                     ],
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(item.medicine.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                                      Text('${item.quantity} x ${item.batch.salePrice.toStringAsFixed(0)}', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                                    ],
+                                  ),
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text('PKR ${(item.quantity * item.batch.salePrice).toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                    InkWell(onTap: () => notifier.removeItem(item.batch.id), child: const Icon(Icons.delete_outline, size: 16, color: Colors.red)),
+                                  ],
+                                ),
                               ],
                             ),
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text('PKR ${(item.quantity * item.batch.salePrice).toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                              InkWell(onTap: () => notifier.removeItem(item.batch.id), child: const Icon(Icons.delete_outline, size: 16, color: Colors.red)),
+                            // Stock warning indicator
+                            if (hasWarning) ...[
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Icon(Icons.warning_amber_rounded, size: 14, color: Colors.orange.shade700),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Stock: ${item.originalStock} | Shortage: ${item.shortage}',
+                                    style: TextStyle(fontSize: 10, color: Colors.orange.shade700, fontWeight: FontWeight.w500),
+                                  ),
+                                ],
+                              ),
                             ],
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     );
                   },
@@ -656,7 +854,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
 
   Widget _buildPaymentSection(CartState cart, CartNotifier notifier) {
      return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
           decoration: BoxDecoration(
             color: Colors.white,
             boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: const Offset(0,-2))],
@@ -664,17 +862,48 @@ class _PosScreenState extends ConsumerState<PosScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-               _buildSummaryRow('Subtotal', cart.subTotal),
-               _buildSummaryRow('Discount', cart.discount),
-               const Divider(height: 16),
+               // Totals Section - Compact
                Row(
-                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                  children: [
-                   const Text('Total', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                   Text('PKR ${cart.grandTotal.toStringAsFixed(0)}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.teal)),
+                   Expanded(
+                     child: Column(
+                       crossAxisAlignment: CrossAxisAlignment.start,
+                       children: [
+                         _buildSummaryRow('Subtotal', cart.subTotal),
+                         InkWell(
+                           onTap: () => _showDiscountDialog(notifier, cart.discountValue, cart.discountType),
+                           child: Row(
+                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                             children: [
+                               Row(children: [
+                                 const Text('Discount', style: TextStyle(color: Colors.grey)),
+                                 const SizedBox(width: 4),
+                                 Icon(Icons.edit, size: 12, color: Colors.teal.shade300),
+                               ]),
+                               Text('${cart.discountType == 'percent' ? '(${cart.discountValue.toStringAsFixed(0)}%) ' : ''}-${cart.discountAmount.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.red)),
+                             ],
+                           ),
+                         ),
+                         if (cart.taxAmount > 0)
+                           _buildSummaryRow('Tax/GST', cart.taxAmount),
+                         if (cart.posFeeAmount > 0)
+                           _buildSummaryRow('POS Fee', cart.posFeeAmount),
+                       ],
+                     ),
+                   ),
+                   const SizedBox(width: 16),
+                   Column(
+                     crossAxisAlignment: CrossAxisAlignment.end,
+                     children: [
+                       const Text('Total', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                       Text('PKR ${cart.grandTotal.toStringAsFixed(0)}', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.teal)),
+                     ],
+                   ),
                  ],
                ),
-               const SizedBox(height: 8),
+               const Divider(height: 12),
+               
+               // Payment Modes
                Row(
                  children: [
                    Expanded(child: _buildPaymentModeBtn('Cash', Icons.money)),
@@ -685,33 +914,38 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                  ],
                ),
                const SizedBox(height: 8),
+               
+               // Amount & Change
                Row(
                  children: [
                    Expanded(
+                     flex: 3,
                      child: SizedBox(
-                       height: 48,
+                       height: 40,
                        child: TextField(
                          controller: _amountReceivedController,
                          focusNode: _amountReceivedFocus,
-                         decoration: const InputDecoration(labelText: 'Amount', prefixText: 'PKR ', isDense: true, border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
+                         decoration: const InputDecoration(labelText: 'Amount Received', prefixText: 'PKR ', isDense: true, border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
                          keyboardType: TextInputType.number,
                          onChanged: (_) => _calculateChange(),
                          onSubmitted: (_) => _handleCheckout(),
+                         style: const TextStyle(fontWeight: FontWeight.bold),
                        ),
                      ),
                    ),
                    const SizedBox(width: 12),
                    Expanded(
+                     flex: 2,
                      child: Container(
-                       height: 48,
-                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                       decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(4), border: Border.all(color: Colors.grey.shade300)),
+                       height: 40,
+                       padding: const EdgeInsets.symmetric(horizontal: 8),
+                       decoration: BoxDecoration(color: _changeReturn < 0 ? Colors.red.shade50 : Colors.green.shade50, borderRadius: BorderRadius.circular(4), border: Border.all(color: _changeReturn < 0 ? Colors.red.shade200 : Colors.green.shade200)),
                        child: Column(
-                         crossAxisAlignment: CrossAxisAlignment.start,
+                         crossAxisAlignment: CrossAxisAlignment.center,
                          mainAxisAlignment: MainAxisAlignment.center,
                          children: [
-                           Text('Change', style: TextStyle(fontSize: 10, color: Colors.grey.shade600)),
-                           Text('PKR ${_changeReturn.toStringAsFixed(0)}', style: TextStyle(fontWeight: FontWeight.bold, color: _changeReturn < 0 ? Colors.red : Colors.black87, fontSize: 13)),
+                           Text('Change', style: TextStyle(fontSize: 9, color: _changeReturn < 0 ? Colors.red : Colors.green.shade700)),
+                           Text('${_changeReturn.toStringAsFixed(0)}', style: TextStyle(fontWeight: FontWeight.bold, color: _changeReturn < 0 ? Colors.red : Colors.green.shade800, fontSize: 13)),
                          ],
                        ),
                      ),
@@ -719,18 +953,115 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                  ],
                ),
                const SizedBox(height: 8),
+               
+               // Checkout Button
                SizedBox(
                  width: double.infinity,
-                 height: 42,
+                 height: 44,
                  child: ElevatedButton(
                    onPressed: cart.items.isNotEmpty ? _handleCheckout : null,
-                   style: ElevatedButton.styleFrom(backgroundColor: Colors.teal, foregroundColor: Colors.white, elevation: 1),
-                   child: const Text('CHECKOUT', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                   style: ElevatedButton.styleFrom(
+                     backgroundColor: Colors.teal, 
+                     foregroundColor: Colors.white, 
+                     elevation: 2,
+                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                   ),
+                   child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                       Icon(Icons.print, size: 18),
+                       SizedBox(width: 8),
+                       Text('CHECKOUT & PRINT', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                    ],
+                   ),
                  ),
                ),
             ],
           ),
         );
+  }
+
+  void _showDiscountDialog(CartNotifier notifier, double currentValue, String currentType) {
+    final controller = TextEditingController(text: currentValue.toString());
+    String selectedType = currentType; // 'percent' or 'fixed'
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: const Text('Set Discount'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Type Selector
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: InkWell(
+                          onTap: () => setState(() => selectedType = 'percent'),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: selectedType == 'percent' ? Colors.teal : Colors.transparent,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text('Percentage (%)', style: TextStyle(color: selectedType == 'percent' ? Colors.white : Colors.black87, fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: InkWell(
+                          onTap: () => setState(() => selectedType = 'fixed'),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: selectedType == 'fixed' ? Colors.teal : Colors.transparent,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text('Fixed Amount', style: TextStyle(color: selectedType == 'fixed' ? Colors.white : Colors.black87, fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: controller,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: 'Value', 
+                    suffixText: selectedType == 'percent' ? '%' : 'PKR',
+                    border: const OutlineInputBorder(),
+                  ),
+                  autofocus: true,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+              ElevatedButton(
+                onPressed: () {
+                  final val = double.tryParse(controller.text) ?? 0;
+                  notifier.setDiscount(val, type: selectedType);
+                  Navigator.pop(context);
+                },
+                child: const Text('Set'),
+              ),
+            ],
+          );
+        }
+      ),
+    );
   }
 
   Widget _buildSummaryRow(String label, double value) {
@@ -745,7 +1076,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     return InkWell(
       onTap: () => setState(() => _paymentMode = mode),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: 6),
         decoration: BoxDecoration(color: isSelected ? Colors.teal : Colors.white, borderRadius: BorderRadius.circular(4), border: Border.all(color: isSelected ? Colors.teal : Colors.grey.shade300)),
         child: Column(children: [Icon(icon, size: 18, color: isSelected ? Colors.white : Colors.grey), const SizedBox(height: 4), Text(mode, style: TextStyle(fontSize: 11, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal, color: isSelected ? Colors.white : Colors.grey.shade700))]),
       ),

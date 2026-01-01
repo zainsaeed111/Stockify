@@ -46,7 +46,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       }
 
       // Store business data in provider for use throughout the app
-      ref.read(currentShopProvider.notifier).state = businessData;
+      ref.read(currentShopProvider.notifier).setShop(businessData);
 
       // Success! Login
       if (mounted) {

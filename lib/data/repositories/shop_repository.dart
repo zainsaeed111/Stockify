@@ -28,6 +28,11 @@ class ShopRepository {
     required DateTime end,
     required bool isPaid,
     required String securityKey,
+    String? businessType,
+    String? businessDesc,
+    String? website,
+    double gstRate = 0,
+    double posFee = 0,
   }) async {
     final db = _firestore;
     
@@ -38,6 +43,11 @@ class ShopRepository {
       'email': email,
       'phone': phone,
       'address': address,
+      'businessType': businessType ?? 'General Store',
+      'businessDesc': businessDesc ?? '',
+      'website': website ?? '',
+      'gstRate': gstRate,
+      'posFee': posFee,
       'subscriptionStart': Timestamp.fromDate(start),
       'subscriptionEnd': Timestamp.fromDate(end),
       'isPaid': isPaid,
@@ -202,6 +212,64 @@ class ShopRepository {
           'address': address,
         });
         print('✅ Shop info updated in Firebase');
+      }
+    } catch (e) {
+      print('⚠️ FIRESTORE UPDATE ERROR: $e');
+    }
+  }
+
+  /// Update POS Settings (GST, Tax, POS Fee, Discount)
+  Future<void> updatePosSettings({
+    required String email,
+    required double gstRate,
+    required double taxRate,
+    required double posFee,
+    required double defaultDiscount,
+    String gstType = 'percent',
+    String taxType = 'percent',
+    String posFeeType = 'fixed',
+    String discountType = 'percent',
+  }) async {
+    final db = _firestore;
+
+    // Update in-memory cache
+    final memIndex = _inMemoryShops.indexWhere((s) => s['email'] == email);
+    if (memIndex >= 0) {
+      _inMemoryShops[memIndex]['gstRate'] = gstRate;
+      _inMemoryShops[memIndex]['taxRate'] = taxRate;
+      _inMemoryShops[memIndex]['posFee'] = posFee;
+      _inMemoryShops[memIndex]['defaultDiscount'] = defaultDiscount;
+      _inMemoryShops[memIndex]['gstType'] = gstType;
+      _inMemoryShops[memIndex]['taxType'] = taxType;
+      _inMemoryShops[memIndex]['posFeeType'] = posFeeType;
+      _inMemoryShops[memIndex]['discountType'] = discountType;
+    }
+
+    if (db == null) {
+      print('⚠️ FIREBASE NOT CONNECTED: Updated In-Memory Cache only (POS Settings)');
+      return;
+    }
+
+    try {
+      final snapshot = await db
+          .collection('shops')
+          .where('email', isEqualTo: email)
+          .limit(1)
+          .get()
+          .timeout(const Duration(seconds: 5));
+
+      if (snapshot.docs.isNotEmpty) {
+        await snapshot.docs.first.reference.update({
+          'gstRate': gstRate,
+          'taxRate': taxRate,
+          'posFee': posFee,
+          'defaultDiscount': defaultDiscount,
+          'gstType': gstType,
+          'taxType': taxType,
+          'posFeeType': posFeeType,
+          'discountType': discountType,
+        });
+        print('✅ POS Settings updated in Firebase');
       }
     } catch (e) {
       print('⚠️ FIRESTORE UPDATE ERROR: $e');

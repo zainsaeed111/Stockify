@@ -11,101 +11,316 @@ class SalePdfGenerator {
     required List<Medicine> medicines,
     Customer? customer,
     Map<String, dynamic>? shopData,
+    double? amountReceived,
+    double? changeGiven,
+    String? discountType,
+    double? discountValue,
   }) async {
     final doc = pw.Document();
     
     // Get shop info from shopData or use defaults
-    final shopName = shopData?['shopName'] ?? 'Stockify Pharmacy';
+    final shopName = shopData?['shopName'] ?? 'My Business';
     final shopPhone = shopData?['phone'] ?? '';
     final shopAddress = shopData?['address'] ?? '';
+    final shopEmail = shopData?['email'] ?? '';
+    final shopWebsite = shopData?['website'] ?? '';
+    final shopDesc = shopData?['businessDesc'] ?? '';
+    final businessType = shopData?['businessType'] ?? '';
+
+    // Get types for labels
+    final gstType = shopData?['gstType'] ?? 'percent';
+    final gstRate = (shopData?['gstRate'] as num?)?.toDouble() ?? 0.0;
+    final taxType = shopData?['taxType'] ?? 'percent';
+    final taxRate = (shopData?['taxRate'] as num?)?.toDouble() ?? 0.0;
+    final posFeeType = shopData?['posFeeType'] ?? 'fixed';
 
     doc.addPage(
       pw.Page(
-        pageFormat: PdfPageFormat.roll80, // Receipt format
+        pageFormat: PdfPageFormat.roll80,
+        margin: const pw.EdgeInsets.all(12),
         build: (pw.Context context) {
           return pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            crossAxisAlignment: pw.CrossAxisAlignment.center,
             children: [
-              // Shop Header
-              pw.Center(
-                child: pw.Text(
-                  shopName.toUpperCase(),
-                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16),
+              // ===== HEADER =====
+              pw.Container(
+                width: double.infinity,
+                padding: const pw.EdgeInsets.only(bottom: 10),
+                decoration: const pw.BoxDecoration(
+                  border: pw.Border(bottom: pw.BorderSide(width: 2)),
+                ),
+                child: pw.Column(
+                  children: [
+                    // Business Name - Stylish
+                    pw.Text(
+                      shopName.toString().toUpperCase(),
+                      style: pw.TextStyle(
+                        fontWeight: pw.FontWeight.bold,
+                        fontSize: 16,
+                        letterSpacing: 2,
+                      ),
+                      textAlign: pw.TextAlign.center,
+                    ),
+                      if (businessType.isNotEmpty)
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.only(top: 2),
+                        child: pw.Text(
+                          businessType,
+                          style: const pw.TextStyle(fontSize: 10),
+                        ),
+                      ),
+                    if (shopDesc.isNotEmpty)
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.only(top: 2),
+                        child: pw.Text(
+                          shopDesc,
+                          style: const pw.TextStyle(fontSize: 9),
+                          textAlign: pw.TextAlign.center,
+                        ),
+                      ),
+                    pw.SizedBox(height: 4),
+                    if (shopAddress.isNotEmpty)
+                      pw.Text(shopAddress, style: const pw.TextStyle(fontSize: 9)),
+                    if (shopPhone.isNotEmpty)
+                      pw.Text('Tel: $shopPhone', style: const pw.TextStyle(fontSize: 9)),
+                    if (shopEmail.isNotEmpty)
+                      pw.Text(shopEmail, style: const pw.TextStyle(fontSize: 9)),
+                  ],
                 ),
               ),
-              if (shopAddress.isNotEmpty)
-                pw.Center(child: pw.Text(shopAddress, style: const pw.TextStyle(fontSize: 9))),
-              if (shopPhone.isNotEmpty)
-                pw.Center(child: pw.Text('Phone: $shopPhone', style: const pw.TextStyle(fontSize: 9))),
-              pw.Divider(),
               
-              // Invoice Info
-              pw.Text('Invoice: ${sale.invoiceNumber}', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-              pw.Text('Date: ${DateFormat('yyyy-MM-dd HH:mm').format(sale.date)}'),
-              pw.Text('Payment: ${sale.paymentMethod ?? 'Cash'}'),
+              pw.SizedBox(height: 10),
               
-              // Customer / Doctor Info
+              // ===== INVOICE INFO =====
+              pw.Container(
+                width: double.infinity,
+                padding: const pw.EdgeInsets.all(8),
+                decoration: pw.BoxDecoration(
+                  color: PdfColors.grey100,
+                  borderRadius: pw.BorderRadius.circular(4),
+                ),
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      children: [
+                        pw.Text('INVOICE', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
+                        pw.Text('#${sale.invoiceNumber}', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
+                      ],
+                    ),
+                    pw.Divider(height: 8, thickness: 0.5),
+                    _buildInfoRow('Date', DateFormat('dd MMM yyyy').format(sale.date)),
+                    _buildInfoRow('Time', DateFormat('hh:mm a').format(sale.date)),
+                    _buildInfoRow('Payment', sale.paymentMethod ?? 'Cash'),
+                  ],
+                ),
+              ),
+              
+              // ===== CUSTOMER INFO =====
               if (customer != null) ...[
-                pw.Divider(),
+                pw.SizedBox(height: 8),
                 pw.Container(
-                  padding: const pw.EdgeInsets.all(4),
+                  width: double.infinity,
+                  padding: const pw.EdgeInsets.all(8),
                   decoration: pw.BoxDecoration(
-                    border: pw.Border.all(width: 0.5),
+                    border: pw.Border.all(width: 0.5, color: PdfColors.grey400),
+                    borderRadius: pw.BorderRadius.circular(4),
                   ),
                   child: pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      pw.Text(
-                        'Patient/Customer: ${customer.name}',
-                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10),
-                      ),
+                      pw.Text('CUSTOMER', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9, color: PdfColors.grey600)),
+                      pw.SizedBox(height: 2),
+                      pw.Text(customer.name, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
                       if (customer.phoneNumber != null && customer.phoneNumber!.isNotEmpty)
-                        pw.Text('Phone: ${customer.phoneNumber}', style: const pw.TextStyle(fontSize: 9)),
+                        pw.Text('Tel: ${customer.phoneNumber}', style: const pw.TextStyle(fontSize: 9)),
                     ],
                   ),
                 ),
               ],
-              pw.Divider(),
               
-              // Items Table
-              pw.Table.fromTextArray(
-                context: context,
-                headers: ['Item', 'Qty', 'Price', 'Total'],
-                data: items.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final item = entry.value;
-                  final medicine = index < medicines.length ? medicines[index] : null;
-                  return [
-                    medicine?.name ?? 'Item #${item.batchId}',
-                    item.quantity.toString(),
-                    'PKR ${item.price.toStringAsFixed(0)}',
-                    'PKR ${item.total.toStringAsFixed(0)}',
-                  ];
-                }).toList(),
-                headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8),
-                cellStyle: const pw.TextStyle(fontSize: 8),
+              pw.SizedBox(height: 10),
+              
+              // ===== ITEMS TABLE =====
+              pw.Container(
+                decoration: pw.BoxDecoration(
+                  border: pw.Border.all(width: 0.5, color: PdfColors.grey400),
+                  borderRadius: pw.BorderRadius.circular(4),
+                ),
+                child: pw.Column(
+                  children: [
+                    // Table Header
+                    pw.Container(
+                      decoration: const pw.BoxDecoration(
+                        color: PdfColors.grey300,
+                        borderRadius: pw.BorderRadius.only(
+                          topLeft: pw.Radius.circular(3),
+                          topRight: pw.Radius.circular(3),
+                        ),
+                      ),
+                      padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+                      child: pw.Row(
+                        children: [
+                          pw.SizedBox(width: 18, child: pw.Text('No', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9))),
+                          pw.Expanded(flex: 5, child: pw.Text('Item', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9))),
+                          pw.SizedBox(width: 28, child: pw.Text('Qty', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9), textAlign: pw.TextAlign.center)),
+                          pw.SizedBox(width: 35, child: pw.Text('Rate', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9), textAlign: pw.TextAlign.right)),
+                          pw.SizedBox(width: 42, child: pw.Text('Total', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9), textAlign: pw.TextAlign.right)),
+                        ],
+                      ),
+                    ),
+                    // Table Rows
+                    ...items.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final item = entry.value;
+                      final medicine = index < medicines.length ? medicines[index] : null;
+                      final isEven = index % 2 == 0;
+                      
+                      return pw.Container(
+                        color: isEven ? PdfColors.white : PdfColors.grey50,
+                        padding: const pw.EdgeInsets.symmetric(vertical: 5, horizontal: 6),
+                        child: pw.Row(
+                          crossAxisAlignment: pw.CrossAxisAlignment.start,
+                          children: [
+                            pw.SizedBox(width: 18, child: pw.Text('${index + 1}.', style: const pw.TextStyle(fontSize: 9))),
+                            pw.Expanded(
+                              flex: 5, 
+                              child: pw.Text(
+                                medicine?.name ?? 'Item', 
+                                style: const pw.TextStyle(fontSize: 9),
+                              ),
+                            ),
+                            pw.SizedBox(width: 28, child: pw.Text('${item.quantity}', style: const pw.TextStyle(fontSize: 9), textAlign: pw.TextAlign.center)),
+                            pw.SizedBox(width: 35, child: pw.Text('${item.price.toStringAsFixed(0)}', style: const pw.TextStyle(fontSize: 9), textAlign: pw.TextAlign.right)),
+                            pw.SizedBox(width: 42, child: pw.Text('${item.total.toStringAsFixed(0)}', style: const pw.TextStyle(fontSize: 9), textAlign: pw.TextAlign.right)),
+                          ],
+                        ),
+                      );
+                    }),
+                  ],
+                ),
               ),
-              pw.Divider(),
               
-              // Totals
-              pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
-                pw.Text('Subtotal:'),
-                pw.Text('PKR ${sale.subTotal.toStringAsFixed(0)}'),
-              ]),
-              if (sale.discount > 0)
-                pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
-                  pw.Text('Discount:'),
-                  pw.Text('PKR ${sale.discount.toStringAsFixed(0)}'),
-                ]),
-              pw.Divider(),
-              pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
-                pw.Text('Total:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 12)),
-                pw.Text('PKR ${sale.grandTotal.toStringAsFixed(0)}', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 12)),
-              ]),
-              pw.SizedBox(height: 20),
-              pw.Center(child: pw.Text('Thank you for your purchase!', style: const pw.TextStyle(fontSize: 10))),
-              pw.SizedBox(height: 4),
-              pw.Center(child: pw.Text('Get well soon!', style: const pw.TextStyle(fontSize: 8))),
+              pw.SizedBox(height: 10),
+              
+              // ===== TOTALS =====
+              pw.Container(
+                width: double.infinity,
+                child: pw.Column(
+                  children: [
+                    _buildTotalRow('Subtotal', 'PKR ${sale.subTotal.toStringAsFixed(0)}'),
+                    if (sale.discount > 0)
+                      _buildTotalRow(
+                        'Discount${(discountType == 'percent' && discountValue != null) ? ' (${discountValue.toStringAsFixed(0)}%)' : ''}', 
+                        '- PKR ${sale.discount.toStringAsFixed(0)}', 
+                        color: PdfColors.green700
+                      ),
+                    if (sale.tax > 0)
+                      _buildTotalRow(
+                        'GST/Tax${(gstType == 'percent' && gstRate > 0) ? ' ($gstRate%)' : ''}${(taxType == 'percent' && taxRate > 0) ? ' + Tax $taxRate%' : ''}', 
+                        'PKR ${sale.tax.toStringAsFixed(0)}'
+                      ),
+                    if (sale.posFee > 0)
+                      _buildTotalRow(
+                        'POS Fees', 
+                        'PKR ${sale.posFee.toStringAsFixed(0)}'
+                      ),
+                    pw.Container(
+                      margin: const pw.EdgeInsets.symmetric(vertical: 6),
+                      padding: const pw.EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                      decoration: pw.BoxDecoration(
+                        color: PdfColors.grey800,
+                        borderRadius: pw.BorderRadius.circular(4),
+                      ),
+                      child: pw.Row(
+                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                        children: [
+                          pw.Text('TOTAL', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 14, color: PdfColors.white)),
+                          pw.Text('PKR ${sale.grandTotal.toStringAsFixed(0)}', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 14, color: PdfColors.white)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // ===== PAYMENT INFO =====
+              if (amountReceived != null) ...[
+                pw.Container(
+                  width: double.infinity,
+                  padding: const pw.EdgeInsets.all(8),
+                  decoration: pw.BoxDecoration(
+                    color: PdfColors.grey100,
+                    borderRadius: pw.BorderRadius.circular(4),
+                  ),
+                  child: pw.Column(
+                    children: [
+                      _buildInfoRow('Amount Paid', 'PKR ${amountReceived.toStringAsFixed(0)}'),
+                      if (changeGiven != null && changeGiven > 0)
+                        _buildInfoRow('Change', 'PKR ${changeGiven.toStringAsFixed(0)}'),
+                    ],
+                  ),
+                ),
+              ],
+              
+              pw.SizedBox(height: 16),
+              
+              // ===== THANK YOU MESSAGE =====
+              pw.Container(
+                width: double.infinity,
+                padding: const pw.EdgeInsets.symmetric(vertical: 12),
+                decoration: pw.BoxDecoration(
+                  border: pw.Border.all(width: 1, color: PdfColors.grey400),
+                  borderRadius: pw.BorderRadius.circular(4),
+                ),
+                child: pw.Column(
+                  children: [
+                    pw.Text(
+                      '- - - THANK YOU - - -',
+                      style: pw.TextStyle(
+                        fontWeight: pw.FontWeight.bold,
+                        fontSize: 10,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                    pw.SizedBox(height: 4),
+                    pw.Text(
+                      'We appreciate your business!',
+                      style: const pw.TextStyle(fontSize: 9),
+                    ),
+                    pw.Text(
+                      'Please visit again',
+                      style: const pw.TextStyle(fontSize: 8),
+                    ),
+                  ],
+                ),
+              ),
+              
+              pw.SizedBox(height: 10),
+              
+              // ===== FOOTER =====
+              if (shopWebsite.isNotEmpty || shopEmail.isNotEmpty || shopPhone.isNotEmpty)
+                pw.Container(
+                  width: double.infinity,
+                  child: pw.Column(
+                    children: [
+                      if (shopWebsite.isNotEmpty)
+                        pw.Text('Web: $shopWebsite', style: const pw.TextStyle(fontSize: 8)),
+                      if (shopEmail.isNotEmpty)
+                        pw.Text('Email: $shopEmail', style: const pw.TextStyle(fontSize: 8)),
+                      if (shopPhone.isNotEmpty)
+                        pw.Text('Phone: $shopPhone', style: const pw.TextStyle(fontSize: 8)),
+                    ],
+                  ),
+                ),
+              
+              pw.SizedBox(height: 8),
+              pw.Divider(thickness: 0.5),
+              pw.Text(
+                'Powered by Stockify',
+                style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey500),
+              ),
             ],
           );
         },
@@ -113,5 +328,38 @@ class SalePdfGenerator {
     );
 
     return doc.save();
+  }
+  
+  static pw.Widget _buildInfoRow(String label, String value) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.symmetric(vertical: 1),
+      child: pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          pw.Text(label, style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700)),
+          pw.Text(value, style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+  
+  static pw.Widget _buildTotalRow(String label, String value, {PdfColor? color}) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.symmetric(vertical: 2),
+      child: pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          pw.Text(label, style: const pw.TextStyle(fontSize: 10)),
+          pw.Text(
+            value, 
+            style: pw.TextStyle(
+              fontSize: 10,
+              fontWeight: pw.FontWeight.bold,
+              color: color ?? PdfColors.black,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

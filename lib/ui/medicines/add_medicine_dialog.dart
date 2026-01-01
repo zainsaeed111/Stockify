@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,6 +6,7 @@ import 'package:drift/drift.dart' as drift;
 import 'package:intl/intl.dart';
 import '../../data/repositories/medicine_repository.dart';
 import '../../data/repositories/settings_repository.dart';
+import '../../data/repositories/category_repository.dart';
 import '../../data/database/database.dart';
 
 class AddProductDialog extends ConsumerStatefulWidget {
@@ -37,15 +39,11 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
   String? _selectedMainCategory;
   String? _selectedSubCategory;
   
-  // Changed to non-final to allow dynamic updates if needed, though inplace modification works too.
-  // Using a growable map.
-  final Map<String, List<String>> _categories = {
-    'Medicine': ['Tablet', 'Syrup', 'Injection', 'Capsule', 'Drops', 'Ointment'],
-    'Inventory': ['Raw Material', 'Packaging', 'Equipment'],
-    'General': ['Stationery', 'Cleaning', 'Snacks'],
-    'Electronics': ['Computer', 'Printer', 'Scanner', 'Accessories'],
-    'Antibiotics': ['Combination', 'Macrolides', 'Fluoroquinolones', 'Cephalosporins', 'Other'], // Pre-add common one from errors
-  };
+  // Categories - loaded dynamically from database
+  Map<String, List<String>> _categories = {};
+  // Full category details for showing images/descriptions
+  List<Category> _mainCategoryList = [];
+  Map<int, List<Category>> _subcategoryMap = {};
 
   // Initial Batch Fields (Only for new products or adding stock to existing)
   late TextEditingController _batchNoController;
@@ -58,9 +56,19 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
   List<Medicine> _allMedicines = [];
   Medicine? _selectedExistingMedicine;
 
+  // Form Visibility Settings
+  bool _showManufacturer = true;
+  bool _showMinStock = true;
+  bool _showBatch = true;
+  bool _showExpiry = true;
+  bool _showPurchasePrice = true;
+  bool _showCategory = true;
+  bool _showSubCategory = true;
+
   @override
   void initState() {
     super.initState();
+    _loadFormSettings();
     // Initialize Controllers
     _nameController = TextEditingController(text: widget.medicine?.name ?? '');
     _manufacturerController = TextEditingController(text: widget.medicine?.manufacturer ?? '');
@@ -84,10 +92,12 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
     if (widget.medicine != null) {
       _selectedMainCategory = widget.medicine!.mainCategory;
       _selectedSubCategory = widget.medicine!.subCategory;
-      _ensureCategoryExists(_selectedMainCategory, _selectedSubCategory);
     }
     
     _selectedExistingMedicine = widget.medicine;
+    
+    // Load categories from database
+    _loadCategories();
     
     // Load defaults if new product
     if (widget.medicine == null) {
@@ -96,6 +106,79 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
     }
     
     // Auto-focus logic handled in Autocomplete or via post-frame
+  }
+
+  Future<void> _loadFormSettings() async {
+    final repo = ref.read(settingsRepositoryProvider);
+    final showMfg = await repo.getSetting('form_show_manufacturer');
+    final showMin = await repo.getSetting('form_show_min_stock');
+    final showBatch = await repo.getSetting('form_show_batch_number');
+    final showExp = await repo.getSetting('form_show_expiry_date');
+    final showBuy = await repo.getSetting('form_show_purchase_price');
+    final showCat = await repo.getSetting('form_show_category');
+    final showSub = await repo.getSetting('form_show_sub_category');
+
+    if (mounted) {
+      setState(() {
+        _showManufacturer = showMfg != 'false'; 
+        _showMinStock = showMin != 'false';
+        _showBatch = showBatch != 'false';
+        _showExpiry = showExp != 'false';
+        _showPurchasePrice = showBuy != 'false';
+        _showCategory = showCat != 'false';
+        _showSubCategory = showSub != 'false';
+      });
+    }
+  }
+  
+  Future<void> _loadCategories() async {
+    final repo = ref.read(categoryRepositoryProvider);
+    final cats = await repo.getCategoriesAsMap();
+    
+    // Load full category details for images/descriptions
+    final mainCats = await repo.getMainCategories();
+    final subMap = <int, List<Category>>{};
+    for (final cat in mainCats) {
+      subMap[cat.id] = await repo.getSubcategories(cat.id);
+    }
+    
+    if (mounted) {
+      setState(() {
+        _categories = cats;
+        _mainCategoryList = mainCats;
+        _subcategoryMap = subMap;
+        // Ensure selected categories exist in loaded data
+        if (_selectedMainCategory != null && !_categories.containsKey(_selectedMainCategory)) {
+          _categories[_selectedMainCategory!] = [];
+        }
+        if (_selectedMainCategory != null && _selectedSubCategory != null) {
+          if (!(_categories[_selectedMainCategory]?.contains(_selectedSubCategory) ?? false)) {
+            _categories[_selectedMainCategory!]?.add(_selectedSubCategory!);
+          }
+        }
+      });
+    }
+  }
+  
+  Category? _getMainCategoryDetails(String? name) {
+    if (name == null) return null;
+    try {
+      return _mainCategoryList.firstWhere((c) => c.name == name);
+    } catch (_) {
+      return null;
+    }
+  }
+  
+  Category? _getSubCategoryDetails(String? mainName, String? subName) {
+    if (mainName == null || subName == null) return null;
+    final mainCat = _getMainCategoryDetails(mainName);
+    if (mainCat == null) return null;
+    try {
+      final subs = _subcategoryMap[mainCat.id] ?? [];
+      return subs.firstWhere((c) => c.name == subName);
+    } catch (_) {
+      return null;
+    }
   }
 
   void _ensureCategoryExists(String? main, String? sub) {
@@ -388,13 +471,74 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
 
                                    const SizedBox(height: 16),
                                    
+                                   // Category Selection Row
+                                   if (_showCategory)
                                    Row(
                                      children: [
                                        Expanded(
                                          child: DropdownButtonFormField<String>(
-                                           value: _selectedMainCategory,
-                                           decoration: const InputDecoration(labelText: 'Category', prefixIcon: Icon(Icons.category), border: OutlineInputBorder()),
-                                           items: _categories.keys.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                                           value: (_mainCategoryList.any((c) => c.name == _selectedMainCategory)) ? _selectedMainCategory : null,
+                                           isExpanded: true, // Important for text overflow
+                                           decoration: const InputDecoration(
+                                             labelText: 'Category', 
+                                             prefixIcon: Icon(Icons.category), 
+                                             border: OutlineInputBorder(),
+                                             contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                                           ),
+                                           items: _mainCategoryList.map((cat) => DropdownMenuItem(
+                                             value: cat.name, 
+                                             child: Row(
+                                               children: [
+                                                 if (cat.imageUrl != null && cat.imageUrl!.isNotEmpty)
+                                                   Container(
+                                                     width: 24,
+                                                     height: 24,
+                                                     margin: const EdgeInsets.only(right: 8),
+                                                     decoration: BoxDecoration(
+                                                       borderRadius: BorderRadius.circular(4),
+                                                       image: DecorationImage(
+                                                         image: FileImage(File(cat.imageUrl!)),
+                                                         fit: BoxFit.cover,
+                                                       ),
+                                                     ),
+                                                   )
+                                                 else
+                                                   Container(
+                                                     width: 24,
+                                                     height: 24,
+                                                     margin: const EdgeInsets.only(right: 8),
+                                                     decoration: BoxDecoration(
+                                                       color: Colors.teal.shade100,
+                                                       borderRadius: BorderRadius.circular(4),
+                                                     ),
+                                                     child: Icon(Icons.folder, size: 14, color: Colors.teal.shade700),
+                                                   ),
+                                                 Flexible(child: Text(cat.name, overflow: TextOverflow.ellipsis)),
+                                               ],
+                                             ),
+                                           )).toList(),
+                                           selectedItemBuilder: (context) {
+                                             return _mainCategoryList.map((cat) {
+                                                return Row(
+                                                  children: [
+                                                     if (cat.imageUrl != null && cat.imageUrl!.isNotEmpty)
+                                                       Container(
+                                                         width: 24, 
+                                                         height: 24,
+                                                         margin: const EdgeInsets.only(right: 8),
+                                                         decoration: BoxDecoration(
+                                                           borderRadius: BorderRadius.circular(4),
+                                                           image: DecorationImage(
+                                                             image: FileImage(File(cat.imageUrl!)),
+                                                             fit: BoxFit.cover, 
+                                                           ),
+                                                         ),
+                                                       ),
+                                                     Flexible(child: Text(cat.name, overflow: TextOverflow.ellipsis)),
+                                                  ],
+                                                );
+                                             }).toList();
+                                           },
                                            onChanged: (val) {
                                              setState(() {
                                                _selectedMainCategory = val;
@@ -405,31 +549,146 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                                          ),
                                        ),
                                        const SizedBox(width: 12),
+                                       if (_showSubCategory)
                                        Expanded(
                                          child: DropdownButtonFormField<String>(
-                                           value: _selectedSubCategory,
-                                           decoration: const InputDecoration(labelText: 'Sub Category', prefixIcon: Icon(Icons.subdirectory_arrow_right), border: OutlineInputBorder()),
+                                           value: (_selectedSubCategory != null && (_subcategoryMap[_getMainCategoryDetails(_selectedMainCategory)?.id] ?? []).any((s) => s.name == _selectedSubCategory)) ? _selectedSubCategory : null,
+                                           isExpanded: true,
+                                            decoration: const InputDecoration(
+                                             labelText: 'Sub Category', 
+                                             prefixIcon: Icon(Icons.subdirectory_arrow_right), 
+                                             border: OutlineInputBorder(),
+                                             contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                                           ),
                                            items: _selectedMainCategory == null 
                                                ? [] 
-                                               : _categories[_selectedMainCategory]!.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                                               : (_subcategoryMap[_getMainCategoryDetails(_selectedMainCategory)?.id] ?? []).map((sub) => DropdownMenuItem(
+                                                   value: sub.name, 
+                                                   child: Row(
+                                                     children: [
+                                                       if (sub.imageUrl != null && sub.imageUrl!.isNotEmpty)
+                                                         Container(
+                                                           width: 24,
+                                                           height: 24,
+                                                           margin: const EdgeInsets.only(right: 8),
+                                                           decoration: BoxDecoration(
+                                                             borderRadius: BorderRadius.circular(4),
+                                                             image: DecorationImage(
+                                                               image: FileImage(File(sub.imageUrl!)),
+                                                               fit: BoxFit.cover,
+                                                             ),
+                                                           ),
+                                                         )
+                                                       else
+                                                         Container(
+                                                           width: 24,
+                                                           height: 24,
+                                                           margin: const EdgeInsets.only(right: 8),
+                                                           decoration: BoxDecoration(
+                                                             color: Colors.orange.shade100,
+                                                             borderRadius: BorderRadius.circular(4),
+                                                           ),
+                                                           child: Icon(Icons.label, size: 14, color: Colors.orange.shade700),
+                                                         ),
+                                                       Flexible(child: Text(sub.name, overflow: TextOverflow.ellipsis)),
+                                                     ],
+                                                   ),
+                                                 )).toList(),
+                                           selectedItemBuilder: (context) {
+                                              if (_selectedMainCategory == null) return [];
+                                              final subs = _subcategoryMap[_getMainCategoryDetails(_selectedMainCategory)?.id] ?? [];
+                                              return subs.map((sub) {
+                                                return Row(
+                                                  children: [
+                                                     if (sub.imageUrl != null && sub.imageUrl!.isNotEmpty)
+                                                       Container(
+                                                         width: 24, 
+                                                         height: 24,
+                                                         margin: const EdgeInsets.only(right: 8),
+                                                         decoration: BoxDecoration(
+                                                           borderRadius: BorderRadius.circular(4),
+                                                           image: DecorationImage(
+                                                             image: FileImage(File(sub.imageUrl!)),
+                                                             fit: BoxFit.cover, 
+                                                           ),
+                                                         ),
+                                                       ),
+                                                     Flexible(child: Text(sub.name, overflow: TextOverflow.ellipsis)),
+                                                  ],
+                                                );
+                                              }).toList();
+                                           },
                                            onChanged: (val) => setState(() => _selectedSubCategory = val),
                                          ),
                                        ),
                                      ],
                                    ),
                                    
+                                   // Category Preview Card (shows description & image if available)
+                                   if (_selectedSubCategory != null) ...[
+                                     const SizedBox(height: 12),
+                                     Builder(
+                                       builder: (context) {
+                                         final subCat = _getSubCategoryDetails(_selectedMainCategory, _selectedSubCategory);
+                                         if (subCat == null) return const SizedBox.shrink();
+                                         if (subCat.description == null && (subCat.imageUrl == null || subCat.imageUrl!.isEmpty)) {
+                                           return const SizedBox.shrink();
+                                         }
+                                         return Container(
+                                           padding: const EdgeInsets.all(12),
+                                           decoration: BoxDecoration(
+                                             color: Colors.orange.shade50,
+                                             borderRadius: BorderRadius.circular(12),
+                                             border: Border.all(color: Colors.orange.shade200),
+                                           ),
+                                           child: Row(
+                                             children: [
+                                               if (subCat.imageUrl != null && subCat.imageUrl!.isNotEmpty)
+                                                 Container(
+                                                   width: 48,
+                                                   height: 48,
+                                                   margin: const EdgeInsets.only(right: 12),
+                                                   decoration: BoxDecoration(
+                                                     borderRadius: BorderRadius.circular(8),
+                                                     image: DecorationImage(
+                                                       image: FileImage(File(subCat.imageUrl!)),
+                                                       fit: BoxFit.cover,
+                                                     ),
+                                                   ),
+                                                 ),
+                                               Expanded(
+                                                 child: Column(
+                                                   crossAxisAlignment: CrossAxisAlignment.start,
+                                                   children: [
+                                                     Text(subCat.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                                     if (subCat.description != null)
+                                                       Text(subCat.description!, style: TextStyle(fontSize: 11, color: Colors.grey.shade700)),
+                                                   ],
+                                                 ),
+                                               ),
+                                             ],
+                                           ),
+                                         );
+                                       },
+                                     ),
+                                   ],
+                                   
                                    const SizedBox(height: 16),
                                    
-                                   TextFormField(
-                                      controller: _manufacturerController,
-                                      focusNode: _manufacturerFocus,
-                                      decoration: const InputDecoration(labelText: 'Manufacturer / Brand', prefixIcon: Icon(Icons.factory), border: OutlineInputBorder()),
-                                      textInputAction: TextInputAction.next,
-                                      onFieldSubmitted: (_) => _minStockFocus.requestFocus(),
-                                   ),
-                                   
                                    const SizedBox(height: 16),
                                    
+                                   if (_showManufacturer) ...[
+                                     TextFormField(
+                                        controller: _manufacturerController,
+                                        focusNode: _manufacturerFocus,
+                                        decoration: const InputDecoration(labelText: 'Manufacturer / Brand', prefixIcon: Icon(Icons.factory), border: OutlineInputBorder()),
+                                        textInputAction: TextInputAction.next,
+                                        onFieldSubmitted: (_) => _minStockFocus.requestFocus(),
+                                     ),
+                                     const SizedBox(height: 16),
+                                   ],
+                                   
+                                   if (_showMinStock)
                                    TextFormField(
                                       controller: _minStockController,
                                       focusNode: _minStockFocus,
@@ -466,6 +725,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                                    
                                    Row(
                                      children: [
+                                       if (_showBatch)
                                        Expanded(
                                           child: TextFormField(
                                             controller: _batchNoController,
@@ -475,7 +735,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                                             onFieldSubmitted: (_) => _qtyFocus.requestFocus(),
                                           ),
                                         ),
-                                        const SizedBox(width: 12),
+                                        if (_showBatch) const SizedBox(width: 12),
                                         Expanded(
                                           child: TextFormField(
                                             controller: _qtyController,
@@ -493,6 +753,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                                    
                                    Row(
                                      children: [
+                                       if (_showPurchasePrice)
                                        Expanded(
                                           child: TextFormField(
                                             controller: _purchasePriceController,
@@ -503,7 +764,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                                             onFieldSubmitted: (_) => _salePriceFocus.requestFocus(),
                                           ),
                                         ),
-                                        const SizedBox(width: 12),
+                                        if (_showPurchasePrice) const SizedBox(width: 12),
                                         Expanded(
                                           child: TextFormField(
                                             controller: _salePriceController,
@@ -518,28 +779,29 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                                      ],
                                    ),
                                    
-                                   const SizedBox(height: 16),
-                                   
-                                   InkWell(
-                                     onTap: () async {
-                                       final picked = await showDatePicker(
-                                         context: context,
-                                         initialDate: _expiryDate,
-                                         firstDate: DateTime.now(),
-                                         lastDate: DateTime.now().add(const Duration(days: 3650)),
-                                       );
-                                       if (picked != null) setState(() => _expiryDate = picked);
-                                     },
-                                     child: InputDecorator(
-                                       decoration: const InputDecoration(
-                                         labelText: 'Expiry Date',
-                                         prefixIcon: Icon(Icons.calendar_today),
-                                         filled: true, 
-                                         fillColor: Colors.white,
+                                   if (_showExpiry) ...[
+                                     const SizedBox(height: 16),
+                                     InkWell(
+                                       onTap: () async {
+                                         final picked = await showDatePicker(
+                                           context: context,
+                                           initialDate: _expiryDate,
+                                           firstDate: DateTime.now(),
+                                           lastDate: DateTime.now().add(const Duration(days: 3650)),
+                                         );
+                                         if (picked != null) setState(() => _expiryDate = picked);
+                                       },
+                                       child: InputDecorator(
+                                         decoration: const InputDecoration(
+                                           labelText: 'Expiry Date',
+                                           prefixIcon: Icon(Icons.calendar_today),
+                                           filled: true, 
+                                           fillColor: Colors.white,
+                                         ),
+                                         child: Text(DateFormat.yMMMd().format(_expiryDate)),
                                        ),
-                                       child: Text(DateFormat.yMMMd().format(_expiryDate)),
                                      ),
-                                   ),
+                                   ],
                                  ],
                                ),
                              ),

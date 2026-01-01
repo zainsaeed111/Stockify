@@ -8,6 +8,9 @@ import '../../data/repositories/user_repository.dart';
 import '../../data/repositories/shop_repository.dart';
 import '../../data/providers/current_shop_provider.dart';
 import '../../data/database/database.dart';
+import 'category_management_screen.dart';
+import 'pos_settings_screen.dart';
+import 'product_form_settings_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -72,7 +75,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       updatedData['ownerName'] = _ownerNameController.text.trim();
       updatedData['phone'] = _phoneController.text.trim();
       updatedData['address'] = _addressController.text.trim();
-      ref.read(currentShopProvider.notifier).state = updatedData;
+      ref.read(currentShopProvider.notifier).setShop(updatedData);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -210,6 +213,73 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                   ],
                 ),
+              ),
+            ),
+            const SizedBox(height: 30),
+            
+            // Inventory Settings Section
+            _buildSectionHeader('Inventory Settings'),
+            Card(
+              child: ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.purple.shade100,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.category, color: Colors.purple),
+                ),
+                title: const Text('Manage Categories'),
+                subtitle: const Text('Add custom categories & subcategories'),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const CategoryManagementScreen()),
+                  );
+                },
+              ),
+            ),
+            Card(
+              child: ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade100,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.point_of_sale, color: Colors.blue),
+                ),
+                title: const Text('Manage POS'),
+                subtitle: const Text('Configure Defaults (Tax, GST, Fees, Discount)'),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const PosSettingsScreen()),
+                  );
+                },
+              ),
+            ),
+            Card(
+              child: ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.teal.shade100,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.input, color: Colors.teal),
+                ),
+                title: const Text('Product Entry Form'),
+                subtitle: const Text('Customize fields (Hide/Show)'),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ProductFormSettingsScreen()),
+                  );
+                },
               ),
             ),
             const SizedBox(height: 30),

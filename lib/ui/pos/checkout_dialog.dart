@@ -8,10 +8,14 @@ import '../../data/providers/current_shop_provider.dart';
 import '../../data/database/database.dart';
 import 'package:printing/printing.dart';
 import '../sales/sale_pdf_generator.dart';
+import '../sales/receipt_preview_screen.dart';
 import 'cart_provider.dart';
 
 class CheckoutDialog extends ConsumerStatefulWidget {
-  const CheckoutDialog({super.key});
+  final double? initialAmount;
+  final String? initialPaymentMode;
+
+  const CheckoutDialog({super.key, this.initialAmount, this.initialPaymentMode});
 
   @override
   ConsumerState<CheckoutDialog> createState() => _CheckoutDialogState();
@@ -19,7 +23,7 @@ class CheckoutDialog extends ConsumerStatefulWidget {
 
 class _CheckoutDialogState extends ConsumerState<CheckoutDialog> {
   bool _isProcessing = false;
-  String _paymentMode = 'Cash'; // Cash, Card, Online
+  late String _paymentMode; // Cash, Card, Online
   final TextEditingController _amountReceivedController = TextEditingController();
   final FocusNode _amountFocus = FocusNode();
   double _change = 0.0;
@@ -28,8 +32,15 @@ class _CheckoutDialogState extends ConsumerState<CheckoutDialog> {
   void initState() {
     super.initState();
     final cart = ref.read(cartProvider);
-    _amountReceivedController.text = cart.grandTotal.toStringAsFixed(2);
-    _change = 0.0;
+    _paymentMode = widget.initialPaymentMode ?? 'Cash';
+    
+    if (widget.initialAmount != null && widget.initialAmount! > 0) {
+      _amountReceivedController.text = widget.initialAmount!.toStringAsFixed(2);
+    } else {
+      _amountReceivedController.text = cart.grandTotal.toStringAsFixed(2);
+    }
+    
+    _calculateChange(); // Calculate immediately based on initial values
     
     _amountReceivedController.addListener(_calculateChange);
     
@@ -80,16 +91,7 @@ class _CheckoutDialogState extends ConsumerState<CheckoutDialog> {
       final medicineRepo = ref.read(medicineRepositoryProvider);
       final shopData = ref.read(currentShopProvider);
       
-      // Ensure customer is saved
-      if (cart.customer == null) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Please enter customer information')),
-          );
-          setState(() => _isProcessing = false);
-        }
-        return;
-      }
+      // Customer is optional - proceed without validation
       
       // Create Sale
       final saleId = await saleRepo.createSale(
@@ -98,8 +100,11 @@ class _CheckoutDialogState extends ConsumerState<CheckoutDialog> {
           date: drift.Value(DateTime.now()),
           customerId: cart.customer != null ? drift.Value(cart.customer!.id) : const drift.Value.absent(),
           subTotal: drift.Value(cart.subTotal),
-          discount: drift.Value(cart.discount),
+          discount: drift.Value(cart.discountAmount), // Use discountAmount
+          tax: drift.Value(cart.taxAmount), // Save Tax
+          posFee: drift.Value(cart.posFee), // Save POS Fee
           grandTotal: drift.Value(cart.grandTotal),
+          paymentMethod: drift.Value(_paymentMode), // Save payment method
         ),
         cart.items.map((item) => SaleItemsCompanion(
           batchId: drift.Value(item.batch.id),
@@ -114,6 +119,12 @@ class _CheckoutDialogState extends ConsumerState<CheckoutDialog> {
         await medicineRepo.updateStock(item.batch.id, -item.quantity);
       }
       
+      // Calculate payment info
+      final amountReceived = _paymentMode == 'Cash' 
+          ? (double.tryParse(_amountReceivedController.text) ?? cart.grandTotal)
+          : cart.grandTotal;
+      final changeGiven = amountReceived - cart.grandTotal;
+      
       // Generate PDF with shop data
       final pdfBytes = await SalePdfGenerator.generateSalePdf(
         sale: Sale(
@@ -122,10 +133,11 @@ class _CheckoutDialogState extends ConsumerState<CheckoutDialog> {
           date: DateTime.now(),
           customerId: cart.customer?.id,
           subTotal: cart.subTotal,
-          discount: cart.discount,
+          discount: cart.discountAmount,
           tax: cart.taxAmount,
+          posFee: cart.posFee,
           grandTotal: cart.grandTotal,
-          paymentMethod: _paymentMode, // Use selected payment mode
+          paymentMethod: _paymentMode,
           userId: null,
         ),
         items: cart.items.map((i) => SaleItem(
@@ -138,7 +150,11 @@ class _CheckoutDialogState extends ConsumerState<CheckoutDialog> {
         )).toList(),
         medicines: cart.items.map((i) => i.medicine).toList(),
         customer: cart.customer,
-        shopData: shopData, // Pass shop data for receipt header
+        shopData: shopData,
+        amountReceived: amountReceived,
+        changeGiven: changeGiven > 0 ? changeGiven : null,
+        discountType: cart.discountType,
+        discountValue: cart.discountValue,
       );
 
       // Clear Cart
@@ -146,8 +162,17 @@ class _CheckoutDialogState extends ConsumerState<CheckoutDialog> {
       
       if (context.mounted) {
         Navigator.pop(context); // Close dialog
-        // Show PDF Preview
-        await Printing.layoutPdf(onLayout: (format) => pdfBytes);
+        // Show PDF Preview Screen
+        Navigator.push(
+          context, 
+          PageRouteBuilder(
+            opaque: false,
+            pageBuilder: (_, __, ___) => ReceiptPreviewScreen(
+              title: 'Receipt Preview',
+              buildPdf: (_) => Future.value(pdfBytes), // Use generated bytes
+            ),
+          ),
+        );
       }
     } catch (e) {
       if (context.mounted) {
