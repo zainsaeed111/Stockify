@@ -343,89 +343,143 @@ class _PosScreenState extends ConsumerState<PosScreen> {
           ).toList();
         }
 
-        return Shortcuts(
-          shortcuts: {
-            LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyF): const _FocusSearchIntent(),
-            LogicalKeySet(LogicalKeyboardKey.f2): const _CheckoutIntent(),
-            LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.enter): const _CheckoutIntent(),
-            LogicalKeySet(LogicalKeyboardKey.escape): const _ClearSearchIntent(),
-            LogicalKeySet(LogicalKeyboardKey.arrowUp): const _NavUpIntent(),
-            LogicalKeySet(LogicalKeyboardKey.arrowDown): const _NavDownIntent(),
-            // LogicalKeySet(LogicalKeyboardKey.arrowLeft): const _NavLeftIntent(), // Removed for list view
-            // LogicalKeySet(LogicalKeyboardKey.arrowRight): const _NavRightIntent(), // Removed for list view
-            LogicalKeySet(LogicalKeyboardKey.enter): const _SelectProductIntent(),
-            LogicalKeySet(LogicalKeyboardKey.numpadEnter): const _SelectProductIntent(),
-            // Cart shortcuts
-            LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.arrowUp): const _IncreaseQuantityIntent(),
-            LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.arrowDown): const _DecreaseQuantityIntent(),
-            LogicalKeySet(LogicalKeyboardKey.delete): const _RemoveLastItemIntent(),
-            LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyN): const _NewCustomerIntent(),
-          },
-          child: Actions(
-            actions: {
-              _FocusSearchIntent: CallbackAction<_FocusSearchIntent>(onInvoke: (_) { _productSearchFocus.requestFocus(); return null; }),
-              _CheckoutIntent: CallbackAction<_CheckoutIntent>(onInvoke: (_) { _handleCheckout(); return null; }),
-              _ClearSearchIntent: CallbackAction<_ClearSearchIntent>(onInvoke: (_) { 
-                setState(() { _searchQuery = ''; _selectedProductIndex = 0; });
-                _productSearchFocus.requestFocus(); return null; 
-              }),
-              _NavUpIntent: CallbackAction<_NavUpIntent>(onInvoke: (_) { _moveSelection(-1, filteredMedicines.length); return null; }),
-              _NavDownIntent: CallbackAction<_NavDownIntent>(onInvoke: (_) { _moveSelection(1, filteredMedicines.length); return null; }),
-              // _NavLeftIntent: CallbackAction<_NavLeftIntent>(onInvoke: (_) { _moveSelection(-1, filteredMedicines.length); return null; }),
-              // _NavRightIntent: CallbackAction<_NavRightIntent>(onInvoke: (_) { _moveSelection(1, filteredMedicines.length); return null; }),
-              _SelectProductIntent: CallbackAction<_SelectProductIntent>(onInvoke: (_) { 
-                // Only trigger if we are focused on search/grid, not amount field
-                if (!_amountReceivedFocus.hasFocus) {
-                   _addProductToIndex(_selectedProductIndex, filteredMedicines);
-                }
-                return null; 
-              }),
-               // Cart Actions
-              _IncreaseQuantityIntent: CallbackAction<_IncreaseQuantityIntent>(onInvoke: (_) { if (cart.items.isNotEmpty) cartNotifier.updateQuantity(cart.items.last.batch.id, cart.items.last.quantity + 1); return null; }),
-              _DecreaseQuantityIntent: CallbackAction<_DecreaseQuantityIntent>(onInvoke: (_) { if (cart.items.isNotEmpty) cartNotifier.updateQuantity(cart.items.last.batch.id, cart.items.last.quantity - 1); return null; }),
-              _RemoveLastItemIntent: CallbackAction<_RemoveLastItemIntent>(onInvoke: (_) { if (cart.items.isNotEmpty) cartNotifier.removeItem(cart.items.last.batch.id); return null; }),
-              _NewCustomerIntent: CallbackAction<_NewCustomerIntent>(onInvoke: (_) { showDialog(context: context, builder: (_) => const CustomerEntryDialog()).then((c) { if (c != null) _selectCustomer(c as Customer); }); return null; }),
-            },
-            child: Focus(
-              autofocus: true,
-              child: Scaffold(
-                body: Column(
-                  children: [
-                    _buildTopBar(),
-                    _buildCustomerSection(),
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Expanded(
-                            flex: 5, // Increased flex for product grid
-                            child: Column(
-                              children: [
-                                _buildSearchSection(),
-                                Expanded(child: _buildProductList(filteredMedicines, medicineRepo, cartNotifier)),
-                              ],
-                            ),
-                          ),
-                          VerticalDivider(width: 1, color: Colors.grey.shade300),
-                          Expanded(
-                            flex: 3, // Dedicate 3/8ths to Cart
-                            child: _buildCartPanel(cart, cartNotifier),
-                          ),
-                        ],
-                      ),
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final isMobile = constraints.maxWidth < 900;
+
+            return Shortcuts(
+              shortcuts: {
+                LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyF): const _FocusSearchIntent(),
+                LogicalKeySet(LogicalKeyboardKey.f2): const _CheckoutIntent(),
+                LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.enter): const _CheckoutIntent(),
+                LogicalKeySet(LogicalKeyboardKey.escape): const _ClearSearchIntent(),
+                LogicalKeySet(LogicalKeyboardKey.arrowUp): const _NavUpIntent(),
+                LogicalKeySet(LogicalKeyboardKey.arrowDown): const _NavDownIntent(),
+                LogicalKeySet(LogicalKeyboardKey.enter): const _SelectProductIntent(),
+                LogicalKeySet(LogicalKeyboardKey.numpadEnter): const _SelectProductIntent(),
+                // Cart shortcuts
+                LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.arrowUp): const _IncreaseQuantityIntent(),
+                LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.arrowDown): const _DecreaseQuantityIntent(),
+                LogicalKeySet(LogicalKeyboardKey.delete): const _RemoveLastItemIntent(),
+                LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyN): const _NewCustomerIntent(),
+              },
+              child: Actions(
+                actions: {
+                  _FocusSearchIntent: CallbackAction<_FocusSearchIntent>(onInvoke: (_) { _productSearchFocus.requestFocus(); return null; }),
+                  _CheckoutIntent: CallbackAction<_CheckoutIntent>(onInvoke: (_) { _handleCheckout(); return null; }),
+                  _ClearSearchIntent: CallbackAction<_ClearSearchIntent>(onInvoke: (_) { 
+                    setState(() { _searchQuery = ''; _selectedProductIndex = 0; });
+                    _productSearchFocus.requestFocus(); return null; 
+                  }),
+                  _NavUpIntent: CallbackAction<_NavUpIntent>(onInvoke: (_) { _moveSelection(-1, filteredMedicines.length); return null; }),
+                  _NavDownIntent: CallbackAction<_NavDownIntent>(onInvoke: (_) { _moveSelection(1, filteredMedicines.length); return null; }),
+                  _SelectProductIntent: CallbackAction<_SelectProductIntent>(onInvoke: (_) { 
+                    // Only trigger if we are focused on search/grid, not amount field
+                    if (!_amountReceivedFocus.hasFocus) {
+                       _addProductToIndex(_selectedProductIndex, filteredMedicines);
+                    }
+                    return null; 
+                  }),
+                   // Cart Actions
+                  _IncreaseQuantityIntent: CallbackAction<_IncreaseQuantityIntent>(onInvoke: (_) { if (cart.items.isNotEmpty) cartNotifier.updateQuantity(cart.items.last.batch.id, cart.items.last.quantity + 1); return null; }),
+                  _DecreaseQuantityIntent: CallbackAction<_DecreaseQuantityIntent>(onInvoke: (_) { if (cart.items.isNotEmpty) cartNotifier.updateQuantity(cart.items.last.batch.id, cart.items.last.quantity - 1); return null; }),
+                  _RemoveLastItemIntent: CallbackAction<_RemoveLastItemIntent>(onInvoke: (_) { if (cart.items.isNotEmpty) cartNotifier.removeItem(cart.items.last.batch.id); return null; }),
+                  _NewCustomerIntent: CallbackAction<_NewCustomerIntent>(onInvoke: (_) { showDialog(context: context, builder: (_) => const CustomerEntryDialog()).then((c) { if (c != null) _selectCustomer(c as Customer); }); return null; }),
+                },
+                child: Focus(
+                  autofocus: true,
+                  child: DefaultTabController(
+                    length: 2,
+                    child: Scaffold(
+                      resizeToAvoidBottomInset: false, // Prevent keyboard pushing up layout weirdly on mobile
+                      body: _buildBody(isMobile, filteredMedicines, medicineRepo, cart, cartNotifier),
                     ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ),
+            );
+          }
         );
       }
     );
   }
 
+  Widget _buildBody(bool isMobile, List<Medicine> filteredMedicines, MedicineRepository repo, CartState cart, CartNotifier cartNotifier) {
+    if (isMobile) {
+      return Column(
+        children: [
+          _buildTopBar(isMobile),
+          Expanded(
+            child: Column(
+              children: [
+                _buildCustomerSection(isMobile),
+                // Tabs for Products / Cart
+                Container(
+                  color: Colors.white,
+                  child: TabBar(
+                    labelColor: Colors.teal,
+                    unselectedLabelColor: Colors.grey,
+                    indicatorColor: Colors.teal,
+                    tabs: [
+                      const Tab(text: 'Products'),
+                      Tab(text: 'Cart (${cart.items.fold(0, (sum, item) => sum + item.quantity)})'),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: TabBarView(
+                    children: [
+                      // Product Tab
+                      Column(
+                        children: [
+                          _buildSearchSection(isMobile),
+                          Expanded(child: _buildProductList(filteredMedicines, repo, cartNotifier)),
+                        ],
+                      ),
+                      // Cart Tab
+                      _buildCartPanel(cart, cartNotifier),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    } else {
+      // Desktop Layout (Existing Split View)
+      return Column(
+        children: [
+          _buildTopBar(isMobile),
+          _buildCustomerSection(isMobile),
+          Expanded(
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 5, 
+                  child: Column(
+                    children: [
+                      _buildSearchSection(isMobile),
+                      Expanded(child: _buildProductList(filteredMedicines, repo, cartNotifier)),
+                    ],
+                  ),
+                ),
+                VerticalDivider(width: 1, color: Colors.grey.shade300),
+                Expanded(
+                  flex: 3, 
+                  child: _buildCartPanel(cart, cartNotifier),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+  }
+
   // --- Widgets ---
   
-  Widget _buildTopBar() {
+  Widget _buildTopBar(bool isMobile) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       color: Colors.teal,
@@ -433,30 +487,55 @@ class _PosScreenState extends ConsumerState<PosScreen> {
         children: [
           const Icon(Icons.point_of_sale, color: Colors.white),
           const SizedBox(width: 12),
-          const Text('Point of Sale', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+          Text(isMobile ? 'POS' : 'Point of Sale', style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
           const Spacer(),
-          _buildHeaderAction(Icons.add_circle_outline, 'New Sale', () {
-            ref.read(cartProvider.notifier).clear();
-            _amountReceivedController.clear();
-            setState(() { _changeReturn = 0.0; _selectedProductIndex = 0; _searchQuery = ''; });
-            _productSearchFocus.requestFocus();
-          }),
-          const SizedBox(width: 16),
-          _buildHeaderAction(Icons.pause_circle_outline, 'Hold', () {}),
-          const SizedBox(width: 16),
-          _buildHeaderAction(Icons.history, 'Resume', () {}),
-          Container(height: 24, width: 1, color: Colors.white30, margin: const EdgeInsets.symmetric(horizontal: 16)),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-               const Text('Ali Khan – Cashier', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-               StreamBuilder(
-                 stream: Stream.periodic(const Duration(seconds: 1)),
-                 builder: (_, __) => Text(DateFormat('MMM dd, hh:mm a').format(DateTime.now()), style: const TextStyle(color: Colors.white70, fontSize: 12)),
-               ),
-            ],
-          ),
+          
+          // Action Buttons
+          if (isMobile) ...[
+             IconButton(
+               icon: const Icon(Icons.add_circle_outline, color: Colors.white),
+               tooltip: 'New Sale',
+               onPressed: () {
+                ref.read(cartProvider.notifier).clear();
+                _amountReceivedController.clear();
+                setState(() { _changeReturn = 0.0; _selectedProductIndex = 0; _searchQuery = ''; });
+                _productSearchFocus.requestFocus();
+               },
+             ),
+             PopupMenuButton<String>(
+               icon: const Icon(Icons.more_vert, color: Colors.white),
+               onSelected: (val) {
+                 // Handle menu actions
+               },
+               itemBuilder: (context) => [
+                 const PopupMenuItem(value: 'hold', child: Row(children: [Icon(Icons.pause_circle_outline, color: Colors.black54), SizedBox(width: 8), Text('Hold Sale')])),
+                 const PopupMenuItem(value: 'resume', child: Row(children: [Icon(Icons.history, color: Colors.black54), SizedBox(width: 8), Text('Resume Sale')])),
+               ]
+             )
+          ] else ...[
+            _buildHeaderAction(Icons.add_circle_outline, 'New Sale', () {
+              ref.read(cartProvider.notifier).clear();
+              _amountReceivedController.clear();
+              setState(() { _changeReturn = 0.0; _selectedProductIndex = 0; _searchQuery = ''; });
+              _productSearchFocus.requestFocus();
+            }),
+            const SizedBox(width: 16),
+            _buildHeaderAction(Icons.pause_circle_outline, 'Hold', () {}),
+            const SizedBox(width: 16),
+            _buildHeaderAction(Icons.history, 'Resume', () {}),
+            Container(height: 24, width: 1, color: Colors.white30, margin: const EdgeInsets.symmetric(horizontal: 16)),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                 const Text('Ali Khan – Cashier', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                 StreamBuilder(
+                   stream: Stream.periodic(const Duration(seconds: 1)),
+                   builder: (_, __) => Text(DateFormat('MMM dd, hh:mm a').format(DateTime.now()), style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                 ),
+              ],
+            ),
+          ]
         ],
       ),
     );
@@ -470,55 +549,100 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     );
   }
 
-  Widget _buildCustomerSection() {
+  Widget _buildCustomerSection(bool isMobile) {
     return Container(
       padding: const EdgeInsets.all(12),
       color: Colors.grey.shade100,
-      child: Row(
-        children: [
-           Expanded(
-             child: TextField(
-               controller: _customerNameController,
-               focusNode: _customerNameFocus,
-               decoration: InputDecoration(
-                 hintText: 'Walk-in Customer',
-                 prefixIcon: const Icon(Icons.person, color: Colors.teal),
-                 suffixIcon: const Icon(Icons.arrow_drop_down),
-                 filled: true, fillColor: Colors.white,
-                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
-                 isDense: true, contentPadding: const EdgeInsets.symmetric(vertical: 8),
+      child: isMobile 
+        ? Column(
+           children: [
+             Row(
+               children: [
+                 Expanded(
+                   child: TextField(
+                     controller: _customerNameController,
+                     focusNode: _customerNameFocus,
+                     decoration: InputDecoration(
+                       hintText: 'Walk-in Customer',
+                       prefixIcon: const Icon(Icons.person, color: Colors.teal),
+                       filled: true, fillColor: Colors.white,
+                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                       isDense: true, contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                     ),
+                     onChanged: (val) {
+                       if (val.length > 2) _searchCustomers(val);
+                     },
+                   ),
+                 ),
+                 const SizedBox(width: 8),
+                 ElevatedButton(
+                   onPressed: () { 
+                     showDialog(context: context, builder: (_) => const CustomerEntryDialog()).then((c) { if (c != null) _selectCustomer(c as Customer); });
+                   },
+                   style: ElevatedButton.styleFrom(backgroundColor: Colors.teal, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)), padding: const EdgeInsets.all(12)),
+                   child: const Icon(Icons.add, size: 20),
+                 ),
+               ],
+             ),
+             if (_customerSearchResults.isNotEmpty) 
+               Container(
+                 constraints: const BoxConstraints(maxHeight: 150),
+                 child: ListView.builder(
+                   shrinkWrap: true,
+                   itemCount: _customerSearchResults.length,
+                   itemBuilder: (context, index) {
+                     final c = _customerSearchResults[index];
+                     return ListTile(title: Text(c.name), subtitle: Text(c.phoneNumber ?? ''), onTap: () => _selectCustomer(c), dense: true);
+                   },
+                 ),
                ),
-               onChanged: (val) {
-                 if (val.length > 2) _searchCustomers(val);
+           ],
+        )
+        : Row(
+          children: [
+             Expanded(
+               child: TextField(
+                 controller: _customerNameController,
+                 focusNode: _customerNameFocus,
+                 decoration: InputDecoration(
+                   hintText: 'Walk-in Customer',
+                   prefixIcon: const Icon(Icons.person, color: Colors.teal),
+                   suffixIcon: const Icon(Icons.arrow_drop_down),
+                   filled: true, fillColor: Colors.white,
+                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                   isDense: true, contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                 ),
+                 onChanged: (val) {
+                   if (val.length > 2) _searchCustomers(val);
+                 },
+               ),
+             ),
+             const SizedBox(width: 12),
+             SizedBox(
+               width: 180,
+               child: TextField(
+                 controller: _customerPhoneController,
+                 decoration: InputDecoration(
+                   hintText: 'Phone (Optional)', filled: true, fillColor: Colors.white,
+                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                   isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                 ),
+               ),
+             ),
+             const SizedBox(width: 12),
+             ElevatedButton.icon(
+               onPressed: () { 
+                 showDialog(context: context, builder: (_) => const CustomerEntryDialog()).then((c) { if (c != null) _selectCustomer(c as Customer); });
                },
+               icon: const Icon(Icons.add, size: 18), label: const Text('New'),
+               style: ElevatedButton.styleFrom(backgroundColor: Colors.teal, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
              ),
-           ),
-           const SizedBox(width: 12),
-           SizedBox(
-             width: 180,
-             child: TextField(
-               controller: _customerPhoneController,
-               decoration: InputDecoration(
-                 hintText: 'Phone (Optional)', filled: true, fillColor: Colors.white,
-                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
-                 isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-               ),
-             ),
-           ),
-           const SizedBox(width: 12),
-           ElevatedButton.icon(
-             onPressed: () { 
-               showDialog(context: context, builder: (_) => const CustomerEntryDialog()).then((c) { if (c != null) _selectCustomer(c as Customer); });
-             },
-             icon: const Icon(Icons.add, size: 18), label: const Text('New'),
-             style: ElevatedButton.styleFrom(backgroundColor: Colors.teal, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
-           ),
-        ],
-      ),
+          ],
+        ),
     );
   }
 
-  Widget _buildSearchSection() {
+  Widget _buildSearchSection(bool isMobile) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(color: Colors.white, border: Border(bottom: BorderSide(color: Colors.grey.shade200))),

@@ -10,12 +10,20 @@ class CurrentShopNotifier extends Notifier<Map<String, dynamic>?> {
     state = shop;
   }
 
+  // Alias for update if needed, but setShop works fine
+  void updateShop(Map<String, dynamic> shop) {
+    state = shop;
+  }
+
   void clearShop() {
     state = null;
   }
+  
+  // Alias for compatibility
+  void clear() => clearShop();
 }
 
-final currentShopProvider = NotifierProvider<CurrentShopNotifier, Map<String, dynamic>?>(() => CurrentShopNotifier());
+final currentShopProvider = NotifierProvider<CurrentShopNotifier, Map<String, dynamic>?>(CurrentShopNotifier.new);
 
 /// Helper getters for common shop properties
 extension ShopProviderExtensions on WidgetRef {

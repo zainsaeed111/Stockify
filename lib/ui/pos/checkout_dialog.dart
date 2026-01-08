@@ -231,7 +231,7 @@ class _CheckoutDialogState extends ConsumerState<CheckoutDialog> {
               ],
             ),
             content: SizedBox(
-              width: 480,
+              width: MediaQuery.of(context).size.width > 500 ? 480 : double.maxFinite,
               child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
