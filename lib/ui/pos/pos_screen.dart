@@ -481,10 +481,13 @@ class _PosScreenState extends ConsumerState<PosScreen> {
   
   Widget _buildTopBar(bool isMobile) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       color: Colors.teal,
-      child: Row(
-        children: [
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
           const Icon(Icons.point_of_sale, color: Colors.white),
           const SizedBox(width: 12),
           Text(isMobile ? 'POS' : 'Point of Sale', style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
@@ -537,6 +540,8 @@ class _PosScreenState extends ConsumerState<PosScreen> {
             ),
           ]
         ],
+      ),
+        ),
       ),
     );
   }
@@ -978,14 +983,17 @@ class _PosScreenState extends ConsumerState<PosScreen> {
 
   Widget _buildPaymentSection(CartState cart, CartNotifier notifier) {
      return Container(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
           decoration: BoxDecoration(
             color: Colors.white,
             boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: const Offset(0,-2))],
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
                // Totals Section - Compact
                Row(
                  children: [
@@ -1100,9 +1108,11 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                    ),
                  ),
                ),
-            ],
+              ],
+            ),
           ),
-        );
+        ),
+      );
   }
 
   void _showDiscountDialog(CartNotifier notifier, double currentValue, String currentType) {
@@ -1191,7 +1201,13 @@ class _PosScreenState extends ConsumerState<PosScreen> {
   Widget _buildSummaryRow(String label, double value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
-      child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text(label, style: const TextStyle(color: Colors.grey)), Text('PKR ${value.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.w500))]),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween, 
+        children: [
+          Expanded(child: Text(label, style: const TextStyle(color: Colors.grey), overflow: TextOverflow.ellipsis)), 
+          Text('PKR ${value.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.w500))
+        ]
+      ),
     );
   }
 
