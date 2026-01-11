@@ -61,6 +61,7 @@ class Batches extends Table {
   RealColumn get purchasePrice => real()();
   RealColumn get salePrice => real()();
   IntColumn get quantity => integer()(); // Current stock in this batch
+  IntColumn get packSize => integer().withDefault(const Constant(1))(); // Added in v7
 }
 
 // --- Customer Tables ---
@@ -105,7 +106,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 6; // Added posFee column
+  int get schemaVersion => 7; // Changed to 7
 
   @override
   MigrationStrategy get migration {
@@ -115,38 +116,32 @@ class AppDatabase extends _$AppDatabase {
       },
       onUpgrade: (Migrator m, int from, int to) async {
         if (from < 3) {
-          // Adding columns to Medicines
           try {
             await m.addColumn(medicines, medicines.mainCategory);
             await m.addColumn(medicines, medicines.subCategory);
-          } catch (e) {
-            // Columns might already exist if re-running
-          }
+          } catch (e) { /* ignore */ }
         }
         if (from < 4) {
-          // Add Customers table and customerId to Sales
           try {
             await m.createTable(customers);
             await m.addColumn(sales, sales.customerId);
-          } catch (e) {
-            // Tables/columns might already exist if re-running
-          }
+          } catch (e) { /* ignore */ }
         }
         if (from < 5) {
-          // Add Categories table
           try {
             await m.createTable(categories);
-          } catch (e) {
-            // Table might already exist
-          }
+          } catch (e) { /* ignore */ }
         }
         if (from < 6) {
-          // Add posFee to Sales
           try {
             await m.addColumn(sales, sales.posFee);
-          } catch (e) {
-            // Column might already exist
-          }
+          } catch (e) { /* ignore */ }
+        }
+        if (from < 7) {
+          // Add packSize to Batches
+          try {
+            await m.addColumn(batches, batches.packSize);
+          } catch (e) { /* ignore */ }
         }
       },
     );

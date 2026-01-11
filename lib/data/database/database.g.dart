@@ -1573,6 +1573,18 @@ class $BatchesTable extends Batches with TableInfo<$BatchesTable, Batch> {
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _packSizeMeta = const VerificationMeta(
+    'packSize',
+  );
+  @override
+  late final GeneratedColumn<int> packSize = GeneratedColumn<int>(
+    'pack_size',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1582,6 +1594,7 @@ class $BatchesTable extends Batches with TableInfo<$BatchesTable, Batch> {
     purchasePrice,
     salePrice,
     quantity,
+    packSize,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1652,6 +1665,12 @@ class $BatchesTable extends Batches with TableInfo<$BatchesTable, Batch> {
     } else if (isInserting) {
       context.missing(_quantityMeta);
     }
+    if (data.containsKey('pack_size')) {
+      context.handle(
+        _packSizeMeta,
+        packSize.isAcceptableOrUnknown(data['pack_size']!, _packSizeMeta),
+      );
+    }
     return context;
   }
 
@@ -1689,6 +1708,10 @@ class $BatchesTable extends Batches with TableInfo<$BatchesTable, Batch> {
         DriftSqlType.int,
         data['${effectivePrefix}quantity'],
       )!,
+      packSize: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}pack_size'],
+      )!,
     );
   }
 
@@ -1706,6 +1729,7 @@ class Batch extends DataClass implements Insertable<Batch> {
   final double purchasePrice;
   final double salePrice;
   final int quantity;
+  final int packSize;
   const Batch({
     required this.id,
     required this.medicineId,
@@ -1714,6 +1738,7 @@ class Batch extends DataClass implements Insertable<Batch> {
     required this.purchasePrice,
     required this.salePrice,
     required this.quantity,
+    required this.packSize,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1725,6 +1750,7 @@ class Batch extends DataClass implements Insertable<Batch> {
     map['purchase_price'] = Variable<double>(purchasePrice);
     map['sale_price'] = Variable<double>(salePrice);
     map['quantity'] = Variable<int>(quantity);
+    map['pack_size'] = Variable<int>(packSize);
     return map;
   }
 
@@ -1737,6 +1763,7 @@ class Batch extends DataClass implements Insertable<Batch> {
       purchasePrice: Value(purchasePrice),
       salePrice: Value(salePrice),
       quantity: Value(quantity),
+      packSize: Value(packSize),
     );
   }
 
@@ -1753,6 +1780,7 @@ class Batch extends DataClass implements Insertable<Batch> {
       purchasePrice: serializer.fromJson<double>(json['purchasePrice']),
       salePrice: serializer.fromJson<double>(json['salePrice']),
       quantity: serializer.fromJson<int>(json['quantity']),
+      packSize: serializer.fromJson<int>(json['packSize']),
     );
   }
   @override
@@ -1766,6 +1794,7 @@ class Batch extends DataClass implements Insertable<Batch> {
       'purchasePrice': serializer.toJson<double>(purchasePrice),
       'salePrice': serializer.toJson<double>(salePrice),
       'quantity': serializer.toJson<int>(quantity),
+      'packSize': serializer.toJson<int>(packSize),
     };
   }
 
@@ -1777,6 +1806,7 @@ class Batch extends DataClass implements Insertable<Batch> {
     double? purchasePrice,
     double? salePrice,
     int? quantity,
+    int? packSize,
   }) => Batch(
     id: id ?? this.id,
     medicineId: medicineId ?? this.medicineId,
@@ -1785,6 +1815,7 @@ class Batch extends DataClass implements Insertable<Batch> {
     purchasePrice: purchasePrice ?? this.purchasePrice,
     salePrice: salePrice ?? this.salePrice,
     quantity: quantity ?? this.quantity,
+    packSize: packSize ?? this.packSize,
   );
   Batch copyWithCompanion(BatchesCompanion data) {
     return Batch(
@@ -1803,6 +1834,7 @@ class Batch extends DataClass implements Insertable<Batch> {
           : this.purchasePrice,
       salePrice: data.salePrice.present ? data.salePrice.value : this.salePrice,
       quantity: data.quantity.present ? data.quantity.value : this.quantity,
+      packSize: data.packSize.present ? data.packSize.value : this.packSize,
     );
   }
 
@@ -1815,7 +1847,8 @@ class Batch extends DataClass implements Insertable<Batch> {
           ..write('expiryDate: $expiryDate, ')
           ..write('purchasePrice: $purchasePrice, ')
           ..write('salePrice: $salePrice, ')
-          ..write('quantity: $quantity')
+          ..write('quantity: $quantity, ')
+          ..write('packSize: $packSize')
           ..write(')'))
         .toString();
   }
@@ -1829,6 +1862,7 @@ class Batch extends DataClass implements Insertable<Batch> {
     purchasePrice,
     salePrice,
     quantity,
+    packSize,
   );
   @override
   bool operator ==(Object other) =>
@@ -1840,7 +1874,8 @@ class Batch extends DataClass implements Insertable<Batch> {
           other.expiryDate == this.expiryDate &&
           other.purchasePrice == this.purchasePrice &&
           other.salePrice == this.salePrice &&
-          other.quantity == this.quantity);
+          other.quantity == this.quantity &&
+          other.packSize == this.packSize);
 }
 
 class BatchesCompanion extends UpdateCompanion<Batch> {
@@ -1851,6 +1886,7 @@ class BatchesCompanion extends UpdateCompanion<Batch> {
   final Value<double> purchasePrice;
   final Value<double> salePrice;
   final Value<int> quantity;
+  final Value<int> packSize;
   const BatchesCompanion({
     this.id = const Value.absent(),
     this.medicineId = const Value.absent(),
@@ -1859,6 +1895,7 @@ class BatchesCompanion extends UpdateCompanion<Batch> {
     this.purchasePrice = const Value.absent(),
     this.salePrice = const Value.absent(),
     this.quantity = const Value.absent(),
+    this.packSize = const Value.absent(),
   });
   BatchesCompanion.insert({
     this.id = const Value.absent(),
@@ -1868,6 +1905,7 @@ class BatchesCompanion extends UpdateCompanion<Batch> {
     required double purchasePrice,
     required double salePrice,
     required int quantity,
+    this.packSize = const Value.absent(),
   }) : medicineId = Value(medicineId),
        batchNumber = Value(batchNumber),
        expiryDate = Value(expiryDate),
@@ -1882,6 +1920,7 @@ class BatchesCompanion extends UpdateCompanion<Batch> {
     Expression<double>? purchasePrice,
     Expression<double>? salePrice,
     Expression<int>? quantity,
+    Expression<int>? packSize,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1891,6 +1930,7 @@ class BatchesCompanion extends UpdateCompanion<Batch> {
       if (purchasePrice != null) 'purchase_price': purchasePrice,
       if (salePrice != null) 'sale_price': salePrice,
       if (quantity != null) 'quantity': quantity,
+      if (packSize != null) 'pack_size': packSize,
     });
   }
 
@@ -1902,6 +1942,7 @@ class BatchesCompanion extends UpdateCompanion<Batch> {
     Value<double>? purchasePrice,
     Value<double>? salePrice,
     Value<int>? quantity,
+    Value<int>? packSize,
   }) {
     return BatchesCompanion(
       id: id ?? this.id,
@@ -1911,6 +1952,7 @@ class BatchesCompanion extends UpdateCompanion<Batch> {
       purchasePrice: purchasePrice ?? this.purchasePrice,
       salePrice: salePrice ?? this.salePrice,
       quantity: quantity ?? this.quantity,
+      packSize: packSize ?? this.packSize,
     );
   }
 
@@ -1938,6 +1980,9 @@ class BatchesCompanion extends UpdateCompanion<Batch> {
     if (quantity.present) {
       map['quantity'] = Variable<int>(quantity.value);
     }
+    if (packSize.present) {
+      map['pack_size'] = Variable<int>(packSize.value);
+    }
     return map;
   }
 
@@ -1950,7 +1995,8 @@ class BatchesCompanion extends UpdateCompanion<Batch> {
           ..write('expiryDate: $expiryDate, ')
           ..write('purchasePrice: $purchasePrice, ')
           ..write('salePrice: $salePrice, ')
-          ..write('quantity: $quantity')
+          ..write('quantity: $quantity, ')
+          ..write('packSize: $packSize')
           ..write(')'))
         .toString();
   }
@@ -4328,6 +4374,7 @@ typedef $$BatchesTableCreateCompanionBuilder =
       required double purchasePrice,
       required double salePrice,
       required int quantity,
+      Value<int> packSize,
     });
 typedef $$BatchesTableUpdateCompanionBuilder =
     BatchesCompanion Function({
@@ -4338,6 +4385,7 @@ typedef $$BatchesTableUpdateCompanionBuilder =
       Value<double> purchasePrice,
       Value<double> salePrice,
       Value<int> quantity,
+      Value<int> packSize,
     });
 
 final class $$BatchesTableReferences
@@ -4418,6 +4466,11 @@ class $$BatchesTableFilterComposer
 
   ColumnFilters<int> get quantity => $composableBuilder(
     column: $table.quantity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get packSize => $composableBuilder(
+    column: $table.packSize,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4509,6 +4562,11 @@ class $$BatchesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get packSize => $composableBuilder(
+    column: $table.packSize,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$MedicinesTableOrderingComposer get medicineId {
     final $$MedicinesTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -4565,6 +4623,9 @@ class $$BatchesTableAnnotationComposer
 
   GeneratedColumn<int> get quantity =>
       $composableBuilder(column: $table.quantity, builder: (column) => column);
+
+  GeneratedColumn<int> get packSize =>
+      $composableBuilder(column: $table.packSize, builder: (column) => column);
 
   $$MedicinesTableAnnotationComposer get medicineId {
     final $$MedicinesTableAnnotationComposer composer = $composerBuilder(
@@ -4650,6 +4711,7 @@ class $$BatchesTableTableManager
                 Value<double> purchasePrice = const Value.absent(),
                 Value<double> salePrice = const Value.absent(),
                 Value<int> quantity = const Value.absent(),
+                Value<int> packSize = const Value.absent(),
               }) => BatchesCompanion(
                 id: id,
                 medicineId: medicineId,
@@ -4658,6 +4720,7 @@ class $$BatchesTableTableManager
                 purchasePrice: purchasePrice,
                 salePrice: salePrice,
                 quantity: quantity,
+                packSize: packSize,
               ),
           createCompanionCallback:
               ({
@@ -4668,6 +4731,7 @@ class $$BatchesTableTableManager
                 required double purchasePrice,
                 required double salePrice,
                 required int quantity,
+                Value<int> packSize = const Value.absent(),
               }) => BatchesCompanion.insert(
                 id: id,
                 medicineId: medicineId,
@@ -4676,6 +4740,7 @@ class $$BatchesTableTableManager
                 purchasePrice: purchasePrice,
                 salePrice: salePrice,
                 quantity: quantity,
+                packSize: packSize,
               ),
           withReferenceMapper: (p0) => p0
               .map(

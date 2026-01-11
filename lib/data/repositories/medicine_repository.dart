@@ -34,4 +34,60 @@ class MedicineRepository {
       quantity: Value(newQuantity),
     ));
   }
+  
+  Stream<List<MedicineWithStock>> watchMedicinesWithStock() {
+    final query = _db.select(_db.medicines).join([
+      leftOuterJoin(_db.batches, _db.batches.medicineId.equalsExp(_db.medicines.id))
+    ]);
+
+    return query.watch().map((rows) {
+      final grouped = <Medicine, List<Batch>>{};
+      for (final row in rows) {
+        final med = row.readTable(_db.medicines);
+        final batch = row.readTableOrNull(_db.batches);
+        
+        if (!grouped.containsKey(med)) {
+          grouped[med] = [];
+        }
+        if (batch != null) {
+          grouped[med]!.add(batch);
+        }
+      }
+
+      return grouped.entries.map((entry) {
+        final med = entry.key;
+        final batches = entry.value;
+
+        // Calculate aggregates
+        final totalQty = batches.fold(0, (sum, b) => sum + b.quantity);
+        
+        // Use latest batch (by ID) for display price
+        Batch? latestBatch;
+        if (batches.isNotEmpty) {
+           latestBatch = batches.reduce((curr, next) => next.id > curr.id ? next : curr);
+        }
+
+        return MedicineWithStock(
+          medicine: med,
+          totalQuantity: totalQty,
+          latestPrice: latestBatch?.salePrice ?? 0.0,
+          packSize: latestBatch?.packSize ?? 1,
+        );
+      }).toList();
+    });
+  }
+}
+
+class MedicineWithStock {
+  final Medicine medicine;
+  final int totalQuantity;
+  final double latestPrice; // Unit Sale Price
+  final int packSize;      // Context from latest batch
+
+  MedicineWithStock({
+    required this.medicine,
+    required this.totalQuantity,
+    required this.latestPrice,
+    required this.packSize,
+  });
 }

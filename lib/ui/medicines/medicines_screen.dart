@@ -108,20 +108,20 @@ class _MedicinesScreenState extends ConsumerState<MedicinesScreen> {
                   ),
                 ),
           Expanded(
-            child: StreamBuilder<List<Medicine>>(
-              stream: medicineRepo.watchAllMedicines(),
+            child: StreamBuilder<List<MedicineWithStock>>(
+              stream: medicineRepo.watchMedicinesWithStock(),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
                 
-                var medicines = snapshot.data!;
+                var items = snapshot.data!;
                 if (_searchQuery.isNotEmpty) {
-                  medicines = medicines.where((m) => 
-                    m.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-                    (m.mainCategory?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false)
+                  items = items.where((item) => 
+                    item.medicine.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                    (item.medicine.mainCategory?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false)
                   ).toList();
                 }
 
-                if (medicines.isEmpty) {
+                if (items.isEmpty) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -136,10 +136,10 @@ class _MedicinesScreenState extends ConsumerState<MedicinesScreen> {
 
                 return LayoutBuilder(
                   builder: (context, constraints) {
-                    if (constraints.maxWidth > 800) {
-                      return _buildDesktopTable(medicines, medicineRepo);
+                    if (constraints.maxWidth > 900) {
+                      return _buildDesktopTable(items, medicineRepo);
                     } else {
-                      return _buildMobileList(medicines, medicineRepo);
+                      return _buildMobileList(items, medicineRepo);
                     }
                   },
                 );
@@ -161,7 +161,7 @@ class _MedicinesScreenState extends ConsumerState<MedicinesScreen> {
     );
   }
 
-  Widget _buildDesktopTable(List<Medicine> medicines, MedicineRepository medicineRepo) {
+  Widget _buildDesktopTable(List<MedicineWithStock> items, MedicineRepository medicineRepo) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Card(
@@ -171,35 +171,61 @@ class _MedicinesScreenState extends ConsumerState<MedicinesScreen> {
           width: double.infinity,
           child: DataTable(
             headingRowHeight: 56,
-            dataRowMinHeight: 52,
-            dataRowMaxHeight: 52,
+            dataRowMinHeight: 64, // Increased height for details
+            dataRowMaxHeight: 64,
             columns: const [
               DataColumn(label: Text('ID')),
               DataColumn(label: Text('Name')),
               DataColumn(label: Text('Category')),
-              DataColumn(label: Text('Sub Category')),
-              DataColumn(label: Text('Manufacturer')),
-              DataColumn(label: Text('Min Stock')),
+              DataColumn(label: Text('Stock')),
+              DataColumn(label: Text('Unit Price')),
+              DataColumn(label: Text('Pack Info')),
               DataColumn(label: Text('Actions')),
             ],
-            rows: medicines.map((medicine) {
+            rows: items.map((item) {
+              final medicine = item.medicine;
+              final isPack = item.packSize > 1;
+              final packPrice = item.latestPrice * item.packSize;
+              
               return DataRow(cells: [
                 DataCell(Text('#${medicine.id}', style: const TextStyle(color: Colors.grey))),
                 DataCell(Text(medicine.name, style: const TextStyle(fontWeight: FontWeight.w500))),
-                DataCell(Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(4)),
-                  child: Text(medicine.mainCategory ?? '-', style: TextStyle(color: Colors.blue.shade700, fontSize: 12)),
-                )),
-                DataCell(Text(medicine.subCategory ?? '-')),
-                DataCell(Text(medicine.manufacturer ?? '-')),
-                DataCell(Row(
+                DataCell(Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    if (medicine.minStock < 5) const Icon(Icons.warning, color: Colors.red, size: 16),
-                    const SizedBox(width: 4),
-                    Text(medicine.minStock.toString()),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(4)),
+                      child: Text(medicine.mainCategory ?? '-', style: TextStyle(color: Colors.blue.shade700, fontSize: 12)),
+                    ),
+                    if (medicine.subCategory != null)
+                      Text(medicine.subCategory!, style: TextStyle(color: Colors.grey.shade600, fontSize: 11)),
                   ],
                 )),
+                DataCell(Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (item.totalQuantity <= medicine.minStock) const Icon(Icons.warning_amber, color: Colors.red, size: 16),
+                    if (item.totalQuantity <= medicine.minStock) const SizedBox(width: 4),
+                    Text(item.totalQuantity.toString(), style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: item.totalQuantity <= medicine.minStock ? Colors.red : Colors.black87
+                    )),
+                  ],
+                )),
+                DataCell(Text(item.latestPrice.toStringAsFixed(2))),
+                DataCell(isPack 
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('Pack: ${packPrice.toStringAsFixed(2)}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                        Text('${item.packSize} units/pack', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                      ],
+                    )
+                  : const Text('-', style: TextStyle(color: Colors.grey))
+                ),
                 DataCell(Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -216,9 +242,7 @@ class _MedicinesScreenState extends ConsumerState<MedicinesScreen> {
                     IconButton(
                       icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
                       tooltip: 'Delete',
-                      onPressed: () {
-                         medicineRepo.deleteMedicine(medicine.id);
-                      },
+                      onPressed: () => medicineRepo.deleteMedicine(medicine.id),
                     ),
                   ],
                 )),
@@ -230,12 +254,15 @@ class _MedicinesScreenState extends ConsumerState<MedicinesScreen> {
     );
   }
 
-  Widget _buildMobileList(List<Medicine> medicines, MedicineRepository medicineRepo) {
+  Widget _buildMobileList(List<MedicineWithStock> items, MedicineRepository medicineRepo) {
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: medicines.length,
+      itemCount: items.length,
       itemBuilder: (context, index) {
-        final medicine = medicines[index];
+        final item = items[index];
+        final medicine = item.medicine;
+        final isPack = item.packSize > 1;
+        
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
           child: ListTile(
@@ -248,8 +275,25 @@ class _MedicinesScreenState extends ConsumerState<MedicinesScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 4),
-                Text('${medicine.mainCategory} > ${medicine.subCategory}'),
-                Text('Stock Alert: ${medicine.minStock}'),
+                Text('${medicine.mainCategory} > ${medicine.subCategory ?? '-'}'),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Container(
+                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                       decoration: BoxDecoration(color: Colors.orange.shade50, borderRadius: BorderRadius.circular(4)),
+                       child: Text('Stock: ${item.totalQuantity}', style: TextStyle(color: Colors.orange.shade800, fontWeight: FontWeight.bold, fontSize: 12)),
+                    ),
+                    const SizedBox(width: 8),
+                    Text('Unit: ${item.latestPrice.toStringAsFixed(2)}', style: const TextStyle(fontSize: 12)),
+                  ],
+                ),
+                if (isPack)
+                   Padding(
+                     padding: const EdgeInsets.only(top: 4.0),
+                     child: Text('Pack: ${(item.latestPrice * item.packSize).toStringAsFixed(2)} (${item.packSize}/pack)', 
+                       style: TextStyle(color: Colors.blue.shade700, fontSize: 12, fontWeight: FontWeight.w500)),
+                   ),
               ],
             ),
             trailing: PopupMenuButton(
