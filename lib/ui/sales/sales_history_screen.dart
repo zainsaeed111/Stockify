@@ -8,7 +8,6 @@ class SalesHistoryScreen extends ConsumerWidget {
   const SalesHistoryScreen({super.key});
 
   @override
-  @override
   Widget build(BuildContext context, WidgetRef ref) {
     final saleRepo = ref.watch(saleRepositoryProvider);
 

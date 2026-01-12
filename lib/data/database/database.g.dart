@@ -996,6 +996,28 @@ class $MedicinesTable extends Medicines
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _subtitleMeta = const VerificationMeta(
+    'subtitle',
+  );
+  @override
+  late final GeneratedColumn<String> subtitle = GeneratedColumn<String>(
+    'subtitle',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _imageUrlMeta = const VerificationMeta(
+    'imageUrl',
+  );
+  @override
+  late final GeneratedColumn<String> imageUrl = GeneratedColumn<String>(
+    'image_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _codeMeta = const VerificationMeta('code');
   @override
   late final GeneratedColumn<String> code = GeneratedColumn<String>(
@@ -1067,6 +1089,8 @@ class $MedicinesTable extends Medicines
   List<GeneratedColumn> get $columns => [
     id,
     name,
+    subtitle,
+    imageUrl,
     code,
     mainCategory,
     subCategory,
@@ -1096,6 +1120,18 @@ class $MedicinesTable extends Medicines
       );
     } else if (isInserting) {
       context.missing(_nameMeta);
+    }
+    if (data.containsKey('subtitle')) {
+      context.handle(
+        _subtitleMeta,
+        subtitle.isAcceptableOrUnknown(data['subtitle']!, _subtitleMeta),
+      );
+    }
+    if (data.containsKey('image_url')) {
+      context.handle(
+        _imageUrlMeta,
+        imageUrl.isAcceptableOrUnknown(data['image_url']!, _imageUrlMeta),
+      );
     }
     if (data.containsKey('code')) {
       context.handle(
@@ -1164,6 +1200,14 @@ class $MedicinesTable extends Medicines
         DriftSqlType.string,
         data['${effectivePrefix}name'],
       )!,
+      subtitle: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}subtitle'],
+      ),
+      imageUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}image_url'],
+      ),
       code: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}code'],
@@ -1200,6 +1244,8 @@ class $MedicinesTable extends Medicines
 class Medicine extends DataClass implements Insertable<Medicine> {
   final int id;
   final String name;
+  final String? subtitle;
+  final String? imageUrl;
   final String code;
   final String mainCategory;
   final String? subCategory;
@@ -1209,6 +1255,8 @@ class Medicine extends DataClass implements Insertable<Medicine> {
   const Medicine({
     required this.id,
     required this.name,
+    this.subtitle,
+    this.imageUrl,
     required this.code,
     required this.mainCategory,
     this.subCategory,
@@ -1221,6 +1269,12 @@ class Medicine extends DataClass implements Insertable<Medicine> {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['name'] = Variable<String>(name);
+    if (!nullToAbsent || subtitle != null) {
+      map['subtitle'] = Variable<String>(subtitle);
+    }
+    if (!nullToAbsent || imageUrl != null) {
+      map['image_url'] = Variable<String>(imageUrl);
+    }
     map['code'] = Variable<String>(code);
     map['main_category'] = Variable<String>(mainCategory);
     if (!nullToAbsent || subCategory != null) {
@@ -1240,6 +1294,12 @@ class Medicine extends DataClass implements Insertable<Medicine> {
     return MedicinesCompanion(
       id: Value(id),
       name: Value(name),
+      subtitle: subtitle == null && nullToAbsent
+          ? const Value.absent()
+          : Value(subtitle),
+      imageUrl: imageUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(imageUrl),
       code: Value(code),
       mainCategory: Value(mainCategory),
       subCategory: subCategory == null && nullToAbsent
@@ -1263,6 +1323,8 @@ class Medicine extends DataClass implements Insertable<Medicine> {
     return Medicine(
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
+      subtitle: serializer.fromJson<String?>(json['subtitle']),
+      imageUrl: serializer.fromJson<String?>(json['imageUrl']),
       code: serializer.fromJson<String>(json['code']),
       mainCategory: serializer.fromJson<String>(json['mainCategory']),
       subCategory: serializer.fromJson<String?>(json['subCategory']),
@@ -1277,6 +1339,8 @@ class Medicine extends DataClass implements Insertable<Medicine> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'name': serializer.toJson<String>(name),
+      'subtitle': serializer.toJson<String?>(subtitle),
+      'imageUrl': serializer.toJson<String?>(imageUrl),
       'code': serializer.toJson<String>(code),
       'mainCategory': serializer.toJson<String>(mainCategory),
       'subCategory': serializer.toJson<String?>(subCategory),
@@ -1289,6 +1353,8 @@ class Medicine extends DataClass implements Insertable<Medicine> {
   Medicine copyWith({
     int? id,
     String? name,
+    Value<String?> subtitle = const Value.absent(),
+    Value<String?> imageUrl = const Value.absent(),
     String? code,
     String? mainCategory,
     Value<String?> subCategory = const Value.absent(),
@@ -1298,6 +1364,8 @@ class Medicine extends DataClass implements Insertable<Medicine> {
   }) => Medicine(
     id: id ?? this.id,
     name: name ?? this.name,
+    subtitle: subtitle.present ? subtitle.value : this.subtitle,
+    imageUrl: imageUrl.present ? imageUrl.value : this.imageUrl,
     code: code ?? this.code,
     mainCategory: mainCategory ?? this.mainCategory,
     subCategory: subCategory.present ? subCategory.value : this.subCategory,
@@ -1309,6 +1377,8 @@ class Medicine extends DataClass implements Insertable<Medicine> {
     return Medicine(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
+      subtitle: data.subtitle.present ? data.subtitle.value : this.subtitle,
+      imageUrl: data.imageUrl.present ? data.imageUrl.value : this.imageUrl,
       code: data.code.present ? data.code.value : this.code,
       mainCategory: data.mainCategory.present
           ? data.mainCategory.value
@@ -1331,6 +1401,8 @@ class Medicine extends DataClass implements Insertable<Medicine> {
     return (StringBuffer('Medicine(')
           ..write('id: $id, ')
           ..write('name: $name, ')
+          ..write('subtitle: $subtitle, ')
+          ..write('imageUrl: $imageUrl, ')
           ..write('code: $code, ')
           ..write('mainCategory: $mainCategory, ')
           ..write('subCategory: $subCategory, ')
@@ -1345,6 +1417,8 @@ class Medicine extends DataClass implements Insertable<Medicine> {
   int get hashCode => Object.hash(
     id,
     name,
+    subtitle,
+    imageUrl,
     code,
     mainCategory,
     subCategory,
@@ -1358,6 +1432,8 @@ class Medicine extends DataClass implements Insertable<Medicine> {
       (other is Medicine &&
           other.id == this.id &&
           other.name == this.name &&
+          other.subtitle == this.subtitle &&
+          other.imageUrl == this.imageUrl &&
           other.code == this.code &&
           other.mainCategory == this.mainCategory &&
           other.subCategory == this.subCategory &&
@@ -1369,6 +1445,8 @@ class Medicine extends DataClass implements Insertable<Medicine> {
 class MedicinesCompanion extends UpdateCompanion<Medicine> {
   final Value<int> id;
   final Value<String> name;
+  final Value<String?> subtitle;
+  final Value<String?> imageUrl;
   final Value<String> code;
   final Value<String> mainCategory;
   final Value<String?> subCategory;
@@ -1378,6 +1456,8 @@ class MedicinesCompanion extends UpdateCompanion<Medicine> {
   const MedicinesCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
+    this.subtitle = const Value.absent(),
+    this.imageUrl = const Value.absent(),
     this.code = const Value.absent(),
     this.mainCategory = const Value.absent(),
     this.subCategory = const Value.absent(),
@@ -1388,6 +1468,8 @@ class MedicinesCompanion extends UpdateCompanion<Medicine> {
   MedicinesCompanion.insert({
     this.id = const Value.absent(),
     required String name,
+    this.subtitle = const Value.absent(),
+    this.imageUrl = const Value.absent(),
     required String code,
     this.mainCategory = const Value.absent(),
     this.subCategory = const Value.absent(),
@@ -1399,6 +1481,8 @@ class MedicinesCompanion extends UpdateCompanion<Medicine> {
   static Insertable<Medicine> custom({
     Expression<int>? id,
     Expression<String>? name,
+    Expression<String>? subtitle,
+    Expression<String>? imageUrl,
     Expression<String>? code,
     Expression<String>? mainCategory,
     Expression<String>? subCategory,
@@ -1409,6 +1493,8 @@ class MedicinesCompanion extends UpdateCompanion<Medicine> {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (name != null) 'name': name,
+      if (subtitle != null) 'subtitle': subtitle,
+      if (imageUrl != null) 'image_url': imageUrl,
       if (code != null) 'code': code,
       if (mainCategory != null) 'main_category': mainCategory,
       if (subCategory != null) 'sub_category': subCategory,
@@ -1421,6 +1507,8 @@ class MedicinesCompanion extends UpdateCompanion<Medicine> {
   MedicinesCompanion copyWith({
     Value<int>? id,
     Value<String>? name,
+    Value<String?>? subtitle,
+    Value<String?>? imageUrl,
     Value<String>? code,
     Value<String>? mainCategory,
     Value<String?>? subCategory,
@@ -1431,6 +1519,8 @@ class MedicinesCompanion extends UpdateCompanion<Medicine> {
     return MedicinesCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
+      subtitle: subtitle ?? this.subtitle,
+      imageUrl: imageUrl ?? this.imageUrl,
       code: code ?? this.code,
       mainCategory: mainCategory ?? this.mainCategory,
       subCategory: subCategory ?? this.subCategory,
@@ -1448,6 +1538,12 @@ class MedicinesCompanion extends UpdateCompanion<Medicine> {
     }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
+    }
+    if (subtitle.present) {
+      map['subtitle'] = Variable<String>(subtitle.value);
+    }
+    if (imageUrl.present) {
+      map['image_url'] = Variable<String>(imageUrl.value);
     }
     if (code.present) {
       map['code'] = Variable<String>(code.value);
@@ -1475,6 +1571,8 @@ class MedicinesCompanion extends UpdateCompanion<Medicine> {
     return (StringBuffer('MedicinesCompanion(')
           ..write('id: $id, ')
           ..write('name: $name, ')
+          ..write('subtitle: $subtitle, ')
+          ..write('imageUrl: $imageUrl, ')
           ..write('code: $code, ')
           ..write('mainCategory: $mainCategory, ')
           ..write('subCategory: $subCategory, ')
@@ -1540,6 +1638,17 @@ class $BatchesTable extends Batches with TableInfo<$BatchesTable, Batch> {
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _mfgDateMeta = const VerificationMeta(
+    'mfgDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> mfgDate = GeneratedColumn<DateTime>(
+    'mfg_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _purchasePriceMeta = const VerificationMeta(
     'purchasePrice',
   );
@@ -1591,6 +1700,7 @@ class $BatchesTable extends Batches with TableInfo<$BatchesTable, Batch> {
     medicineId,
     batchNumber,
     expiryDate,
+    mfgDate,
     purchasePrice,
     salePrice,
     quantity,
@@ -1637,6 +1747,12 @@ class $BatchesTable extends Batches with TableInfo<$BatchesTable, Batch> {
       );
     } else if (isInserting) {
       context.missing(_expiryDateMeta);
+    }
+    if (data.containsKey('mfg_date')) {
+      context.handle(
+        _mfgDateMeta,
+        mfgDate.isAcceptableOrUnknown(data['mfg_date']!, _mfgDateMeta),
+      );
     }
     if (data.containsKey('purchase_price')) {
       context.handle(
@@ -1696,6 +1812,10 @@ class $BatchesTable extends Batches with TableInfo<$BatchesTable, Batch> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}expiry_date'],
       )!,
+      mfgDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}mfg_date'],
+      ),
       purchasePrice: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}purchase_price'],
@@ -1726,6 +1846,7 @@ class Batch extends DataClass implements Insertable<Batch> {
   final int medicineId;
   final String batchNumber;
   final DateTime expiryDate;
+  final DateTime? mfgDate;
   final double purchasePrice;
   final double salePrice;
   final int quantity;
@@ -1735,6 +1856,7 @@ class Batch extends DataClass implements Insertable<Batch> {
     required this.medicineId,
     required this.batchNumber,
     required this.expiryDate,
+    this.mfgDate,
     required this.purchasePrice,
     required this.salePrice,
     required this.quantity,
@@ -1747,6 +1869,9 @@ class Batch extends DataClass implements Insertable<Batch> {
     map['medicine_id'] = Variable<int>(medicineId);
     map['batch_number'] = Variable<String>(batchNumber);
     map['expiry_date'] = Variable<DateTime>(expiryDate);
+    if (!nullToAbsent || mfgDate != null) {
+      map['mfg_date'] = Variable<DateTime>(mfgDate);
+    }
     map['purchase_price'] = Variable<double>(purchasePrice);
     map['sale_price'] = Variable<double>(salePrice);
     map['quantity'] = Variable<int>(quantity);
@@ -1760,6 +1885,9 @@ class Batch extends DataClass implements Insertable<Batch> {
       medicineId: Value(medicineId),
       batchNumber: Value(batchNumber),
       expiryDate: Value(expiryDate),
+      mfgDate: mfgDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(mfgDate),
       purchasePrice: Value(purchasePrice),
       salePrice: Value(salePrice),
       quantity: Value(quantity),
@@ -1777,6 +1905,7 @@ class Batch extends DataClass implements Insertable<Batch> {
       medicineId: serializer.fromJson<int>(json['medicineId']),
       batchNumber: serializer.fromJson<String>(json['batchNumber']),
       expiryDate: serializer.fromJson<DateTime>(json['expiryDate']),
+      mfgDate: serializer.fromJson<DateTime?>(json['mfgDate']),
       purchasePrice: serializer.fromJson<double>(json['purchasePrice']),
       salePrice: serializer.fromJson<double>(json['salePrice']),
       quantity: serializer.fromJson<int>(json['quantity']),
@@ -1791,6 +1920,7 @@ class Batch extends DataClass implements Insertable<Batch> {
       'medicineId': serializer.toJson<int>(medicineId),
       'batchNumber': serializer.toJson<String>(batchNumber),
       'expiryDate': serializer.toJson<DateTime>(expiryDate),
+      'mfgDate': serializer.toJson<DateTime?>(mfgDate),
       'purchasePrice': serializer.toJson<double>(purchasePrice),
       'salePrice': serializer.toJson<double>(salePrice),
       'quantity': serializer.toJson<int>(quantity),
@@ -1803,6 +1933,7 @@ class Batch extends DataClass implements Insertable<Batch> {
     int? medicineId,
     String? batchNumber,
     DateTime? expiryDate,
+    Value<DateTime?> mfgDate = const Value.absent(),
     double? purchasePrice,
     double? salePrice,
     int? quantity,
@@ -1812,6 +1943,7 @@ class Batch extends DataClass implements Insertable<Batch> {
     medicineId: medicineId ?? this.medicineId,
     batchNumber: batchNumber ?? this.batchNumber,
     expiryDate: expiryDate ?? this.expiryDate,
+    mfgDate: mfgDate.present ? mfgDate.value : this.mfgDate,
     purchasePrice: purchasePrice ?? this.purchasePrice,
     salePrice: salePrice ?? this.salePrice,
     quantity: quantity ?? this.quantity,
@@ -1829,6 +1961,7 @@ class Batch extends DataClass implements Insertable<Batch> {
       expiryDate: data.expiryDate.present
           ? data.expiryDate.value
           : this.expiryDate,
+      mfgDate: data.mfgDate.present ? data.mfgDate.value : this.mfgDate,
       purchasePrice: data.purchasePrice.present
           ? data.purchasePrice.value
           : this.purchasePrice,
@@ -1845,6 +1978,7 @@ class Batch extends DataClass implements Insertable<Batch> {
           ..write('medicineId: $medicineId, ')
           ..write('batchNumber: $batchNumber, ')
           ..write('expiryDate: $expiryDate, ')
+          ..write('mfgDate: $mfgDate, ')
           ..write('purchasePrice: $purchasePrice, ')
           ..write('salePrice: $salePrice, ')
           ..write('quantity: $quantity, ')
@@ -1859,6 +1993,7 @@ class Batch extends DataClass implements Insertable<Batch> {
     medicineId,
     batchNumber,
     expiryDate,
+    mfgDate,
     purchasePrice,
     salePrice,
     quantity,
@@ -1872,6 +2007,7 @@ class Batch extends DataClass implements Insertable<Batch> {
           other.medicineId == this.medicineId &&
           other.batchNumber == this.batchNumber &&
           other.expiryDate == this.expiryDate &&
+          other.mfgDate == this.mfgDate &&
           other.purchasePrice == this.purchasePrice &&
           other.salePrice == this.salePrice &&
           other.quantity == this.quantity &&
@@ -1883,6 +2019,7 @@ class BatchesCompanion extends UpdateCompanion<Batch> {
   final Value<int> medicineId;
   final Value<String> batchNumber;
   final Value<DateTime> expiryDate;
+  final Value<DateTime?> mfgDate;
   final Value<double> purchasePrice;
   final Value<double> salePrice;
   final Value<int> quantity;
@@ -1892,6 +2029,7 @@ class BatchesCompanion extends UpdateCompanion<Batch> {
     this.medicineId = const Value.absent(),
     this.batchNumber = const Value.absent(),
     this.expiryDate = const Value.absent(),
+    this.mfgDate = const Value.absent(),
     this.purchasePrice = const Value.absent(),
     this.salePrice = const Value.absent(),
     this.quantity = const Value.absent(),
@@ -1902,6 +2040,7 @@ class BatchesCompanion extends UpdateCompanion<Batch> {
     required int medicineId,
     required String batchNumber,
     required DateTime expiryDate,
+    this.mfgDate = const Value.absent(),
     required double purchasePrice,
     required double salePrice,
     required int quantity,
@@ -1917,6 +2056,7 @@ class BatchesCompanion extends UpdateCompanion<Batch> {
     Expression<int>? medicineId,
     Expression<String>? batchNumber,
     Expression<DateTime>? expiryDate,
+    Expression<DateTime>? mfgDate,
     Expression<double>? purchasePrice,
     Expression<double>? salePrice,
     Expression<int>? quantity,
@@ -1927,6 +2067,7 @@ class BatchesCompanion extends UpdateCompanion<Batch> {
       if (medicineId != null) 'medicine_id': medicineId,
       if (batchNumber != null) 'batch_number': batchNumber,
       if (expiryDate != null) 'expiry_date': expiryDate,
+      if (mfgDate != null) 'mfg_date': mfgDate,
       if (purchasePrice != null) 'purchase_price': purchasePrice,
       if (salePrice != null) 'sale_price': salePrice,
       if (quantity != null) 'quantity': quantity,
@@ -1939,6 +2080,7 @@ class BatchesCompanion extends UpdateCompanion<Batch> {
     Value<int>? medicineId,
     Value<String>? batchNumber,
     Value<DateTime>? expiryDate,
+    Value<DateTime?>? mfgDate,
     Value<double>? purchasePrice,
     Value<double>? salePrice,
     Value<int>? quantity,
@@ -1949,6 +2091,7 @@ class BatchesCompanion extends UpdateCompanion<Batch> {
       medicineId: medicineId ?? this.medicineId,
       batchNumber: batchNumber ?? this.batchNumber,
       expiryDate: expiryDate ?? this.expiryDate,
+      mfgDate: mfgDate ?? this.mfgDate,
       purchasePrice: purchasePrice ?? this.purchasePrice,
       salePrice: salePrice ?? this.salePrice,
       quantity: quantity ?? this.quantity,
@@ -1970,6 +2113,9 @@ class BatchesCompanion extends UpdateCompanion<Batch> {
     }
     if (expiryDate.present) {
       map['expiry_date'] = Variable<DateTime>(expiryDate.value);
+    }
+    if (mfgDate.present) {
+      map['mfg_date'] = Variable<DateTime>(mfgDate.value);
     }
     if (purchasePrice.present) {
       map['purchase_price'] = Variable<double>(purchasePrice.value);
@@ -1993,6 +2139,7 @@ class BatchesCompanion extends UpdateCompanion<Batch> {
           ..write('medicineId: $medicineId, ')
           ..write('batchNumber: $batchNumber, ')
           ..write('expiryDate: $expiryDate, ')
+          ..write('mfgDate: $mfgDate, ')
           ..write('purchasePrice: $purchasePrice, ')
           ..write('salePrice: $salePrice, ')
           ..write('quantity: $quantity, ')
@@ -4016,6 +4163,8 @@ typedef $$MedicinesTableCreateCompanionBuilder =
     MedicinesCompanion Function({
       Value<int> id,
       required String name,
+      Value<String?> subtitle,
+      Value<String?> imageUrl,
       required String code,
       Value<String> mainCategory,
       Value<String?> subCategory,
@@ -4027,6 +4176,8 @@ typedef $$MedicinesTableUpdateCompanionBuilder =
     MedicinesCompanion Function({
       Value<int> id,
       Value<String> name,
+      Value<String?> subtitle,
+      Value<String?> imageUrl,
       Value<String> code,
       Value<String> mainCategory,
       Value<String?> subCategory,
@@ -4075,6 +4226,16 @@ class $$MedicinesTableFilterComposer
 
   ColumnFilters<String> get name => $composableBuilder(
     column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get subtitle => $composableBuilder(
+    column: $table.subtitle,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get imageUrl => $composableBuilder(
+    column: $table.imageUrl,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4153,6 +4314,16 @@ class $$MedicinesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get subtitle => $composableBuilder(
+    column: $table.subtitle,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get imageUrl => $composableBuilder(
+    column: $table.imageUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get code => $composableBuilder(
     column: $table.code,
     builder: (column) => ColumnOrderings(column),
@@ -4198,6 +4369,12 @@ class $$MedicinesTableAnnotationComposer
 
   GeneratedColumn<String> get name =>
       $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get subtitle =>
+      $composableBuilder(column: $table.subtitle, builder: (column) => column);
+
+  GeneratedColumn<String> get imageUrl =>
+      $composableBuilder(column: $table.imageUrl, builder: (column) => column);
 
   GeneratedColumn<String> get code =>
       $composableBuilder(column: $table.code, builder: (column) => column);
@@ -4281,6 +4458,8 @@ class $$MedicinesTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
+                Value<String?> subtitle = const Value.absent(),
+                Value<String?> imageUrl = const Value.absent(),
                 Value<String> code = const Value.absent(),
                 Value<String> mainCategory = const Value.absent(),
                 Value<String?> subCategory = const Value.absent(),
@@ -4290,6 +4469,8 @@ class $$MedicinesTableTableManager
               }) => MedicinesCompanion(
                 id: id,
                 name: name,
+                subtitle: subtitle,
+                imageUrl: imageUrl,
                 code: code,
                 mainCategory: mainCategory,
                 subCategory: subCategory,
@@ -4301,6 +4482,8 @@ class $$MedicinesTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 required String name,
+                Value<String?> subtitle = const Value.absent(),
+                Value<String?> imageUrl = const Value.absent(),
                 required String code,
                 Value<String> mainCategory = const Value.absent(),
                 Value<String?> subCategory = const Value.absent(),
@@ -4310,6 +4493,8 @@ class $$MedicinesTableTableManager
               }) => MedicinesCompanion.insert(
                 id: id,
                 name: name,
+                subtitle: subtitle,
+                imageUrl: imageUrl,
                 code: code,
                 mainCategory: mainCategory,
                 subCategory: subCategory,
@@ -4371,6 +4556,7 @@ typedef $$BatchesTableCreateCompanionBuilder =
       required int medicineId,
       required String batchNumber,
       required DateTime expiryDate,
+      Value<DateTime?> mfgDate,
       required double purchasePrice,
       required double salePrice,
       required int quantity,
@@ -4382,6 +4568,7 @@ typedef $$BatchesTableUpdateCompanionBuilder =
       Value<int> medicineId,
       Value<String> batchNumber,
       Value<DateTime> expiryDate,
+      Value<DateTime?> mfgDate,
       Value<double> purchasePrice,
       Value<double> salePrice,
       Value<int> quantity,
@@ -4451,6 +4638,11 @@ class $$BatchesTableFilterComposer
 
   ColumnFilters<DateTime> get expiryDate => $composableBuilder(
     column: $table.expiryDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get mfgDate => $composableBuilder(
+    column: $table.mfgDate,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4547,6 +4739,11 @@ class $$BatchesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get mfgDate => $composableBuilder(
+    column: $table.mfgDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<double> get purchasePrice => $composableBuilder(
     column: $table.purchasePrice,
     builder: (column) => ColumnOrderings(column),
@@ -4612,6 +4809,9 @@ class $$BatchesTableAnnotationComposer
     column: $table.expiryDate,
     builder: (column) => column,
   );
+
+  GeneratedColumn<DateTime> get mfgDate =>
+      $composableBuilder(column: $table.mfgDate, builder: (column) => column);
 
   GeneratedColumn<double> get purchasePrice => $composableBuilder(
     column: $table.purchasePrice,
@@ -4708,6 +4908,7 @@ class $$BatchesTableTableManager
                 Value<int> medicineId = const Value.absent(),
                 Value<String> batchNumber = const Value.absent(),
                 Value<DateTime> expiryDate = const Value.absent(),
+                Value<DateTime?> mfgDate = const Value.absent(),
                 Value<double> purchasePrice = const Value.absent(),
                 Value<double> salePrice = const Value.absent(),
                 Value<int> quantity = const Value.absent(),
@@ -4717,6 +4918,7 @@ class $$BatchesTableTableManager
                 medicineId: medicineId,
                 batchNumber: batchNumber,
                 expiryDate: expiryDate,
+                mfgDate: mfgDate,
                 purchasePrice: purchasePrice,
                 salePrice: salePrice,
                 quantity: quantity,
@@ -4728,6 +4930,7 @@ class $$BatchesTableTableManager
                 required int medicineId,
                 required String batchNumber,
                 required DateTime expiryDate,
+                Value<DateTime?> mfgDate = const Value.absent(),
                 required double purchasePrice,
                 required double salePrice,
                 required int quantity,
@@ -4737,6 +4940,7 @@ class $$BatchesTableTableManager
                 medicineId: medicineId,
                 batchNumber: batchNumber,
                 expiryDate: expiryDate,
+                mfgDate: mfgDate,
                 purchasePrice: purchasePrice,
                 salePrice: salePrice,
                 quantity: quantity,

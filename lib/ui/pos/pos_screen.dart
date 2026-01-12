@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../data/repositories/medicine_repository.dart';
 import '../../data/repositories/customer_repository.dart';
 import '../../data/database/database.dart';
 import '../../utils/sample_data_importer.dart';
+import '../theme/app_theme.dart';
 import 'cart_provider.dart';
 import 'checkout_dialog.dart';
 import 'customer_entry_dialog.dart';
@@ -549,15 +552,22 @@ class _PosScreenState extends ConsumerState<PosScreen> {
   Widget _buildHeaderAction(IconData icon, String label, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(4),
-      child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), child: Row(children: [Icon(icon, color: Colors.white, size: 18), const SizedBox(width: 4), Text(label, style: const TextStyle(color: Colors.white))])),
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(children: [Icon(icon, color: Theme.of(context).colorScheme.onPrimary, size: 18), const SizedBox(width: 4), Text(label, style: GoogleFonts.inter(color: Theme.of(context).colorScheme.onPrimary))])
+      ),
     );
   }
 
   Widget _buildCustomerSection(bool isMobile) {
     return Container(
-      padding: const EdgeInsets.all(12),
-      color: Colors.grey.shade100,
+      padding: const EdgeInsets.all(16),
+      color: Theme.of(context).cardTheme.color,
       child: isMobile 
         ? Column(
            children: [
@@ -568,11 +578,13 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                      controller: _customerNameController,
                      focusNode: _customerNameFocus,
                      decoration: InputDecoration(
+                       labelText: 'Customer Name',
+                       labelStyle: GoogleFonts.inter(),
                        hintText: 'Walk-in Customer',
-                       prefixIcon: const Icon(Icons.person, color: Colors.teal),
-                       filled: true, fillColor: Colors.white,
-                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
-                       isDense: true, contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                       prefixIcon: Icon(Icons.person, color: Theme.of(context).colorScheme.primary),
+                       filled: true, fillColor: Theme.of(context).inputDecorationTheme.fillColor,
+                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                       isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                      ),
                      onChanged: (val) {
                        if (val.length > 2) _searchCustomers(val);
@@ -584,7 +596,12 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                    onPressed: () { 
                      showDialog(context: context, builder: (_) => const CustomerEntryDialog()).then((c) { if (c != null) _selectCustomer(c as Customer); });
                    },
-                   style: ElevatedButton.styleFrom(backgroundColor: Colors.teal, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)), padding: const EdgeInsets.all(12)),
+                   style: ElevatedButton.styleFrom(
+                     backgroundColor: Theme.of(context).colorScheme.primary,
+                     foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                     padding: const EdgeInsets.all(12),
+                   ),
                    child: const Icon(Icons.add, size: 20),
                  ),
                ],
@@ -610,12 +627,14 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                  controller: _customerNameController,
                  focusNode: _customerNameFocus,
                  decoration: InputDecoration(
+                   labelText: 'Customer Name',
+                   labelStyle: GoogleFonts.inter(),
                    hintText: 'Walk-in Customer',
-                   prefixIcon: const Icon(Icons.person, color: Colors.teal),
+                   prefixIcon: Icon(Icons.person, color: Theme.of(context).colorScheme.primary),
                    suffixIcon: const Icon(Icons.arrow_drop_down),
-                   filled: true, fillColor: Colors.white,
-                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
-                   isDense: true, contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                   filled: true, fillColor: Theme.of(context).inputDecorationTheme.fillColor,
+                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                   isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                  ),
                  onChanged: (val) {
                    if (val.length > 2) _searchCustomers(val);
@@ -628,9 +647,12 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                child: TextField(
                  controller: _customerPhoneController,
                  decoration: InputDecoration(
-                   hintText: 'Phone (Optional)', filled: true, fillColor: Colors.white,
-                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
-                   isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                   labelText: 'Phone',
+                   labelStyle: GoogleFonts.inter(),
+                   hintText: 'Phone (Optional)',
+                   filled: true, fillColor: Theme.of(context).inputDecorationTheme.fillColor,
+                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                   isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                  ),
                ),
              ),
@@ -639,8 +661,14 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                onPressed: () { 
                  showDialog(context: context, builder: (_) => const CustomerEntryDialog()).then((c) { if (c != null) _selectCustomer(c as Customer); });
                },
-               icon: const Icon(Icons.add, size: 18), label: const Text('New'),
-               style: ElevatedButton.styleFrom(backgroundColor: Colors.teal, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+               icon: const Icon(Icons.add, size: 18), 
+               label: const Text('New'),
+               style: ElevatedButton.styleFrom(
+                 backgroundColor: Theme.of(context).colorScheme.primary,
+                 foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+               ),
              ),
           ],
         ),
@@ -649,18 +677,22 @@ class _PosScreenState extends ConsumerState<PosScreen> {
 
   Widget _buildSearchSection(bool isMobile) {
     return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: Colors.white, border: Border(bottom: BorderSide(color: Colors.grey.shade200))),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: Theme.of(context).cardTheme.color, border: Border(bottom: BorderSide(color: Theme.of(context).dividerColor))),
       child: TextField(
         focusNode: _productSearchFocus,
         decoration: InputDecoration(
+          labelText: 'Search Product',
+          labelStyle: GoogleFonts.inter(),
           hintText: 'Search Product...',
-          prefixIcon: const Icon(Icons.search), 
+          prefixIcon: Icon(Icons.search, color: Theme.of(context).colorScheme.primary),
            suffixIcon: _searchQuery.isNotEmpty 
-             ? IconButton(icon: const Icon(Icons.clear), onPressed: () => setState(() { _searchQuery = ''; _selectedProductIndex = 0; _productSearchFocus.requestFocus(); }))
+             ? IconButton(icon: Icon(Icons.clear, color: Theme.of(context).colorScheme.onSurface), onPressed: () => setState(() { _searchQuery = ''; _selectedProductIndex = 0; _productSearchFocus.requestFocus(); }))
              : null,
-          filled: true, fillColor: Colors.grey.shade50,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          filled: true, 
+          fillColor: Theme.of(context).inputDecorationTheme.fillColor,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
         onChanged: (val) => setState(() { _searchQuery = val; _selectedProductIndex = 0; }), 
         onSubmitted: (_) { 
@@ -699,7 +731,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
         // Placeholder while loading stock
          if (!snapshot.hasData) {
            return Container(
-             height: 60,
+             height: 72,
              decoration: BoxDecoration(
                color: Colors.white,
                borderRadius: BorderRadius.circular(8),
@@ -722,68 +754,86 @@ class _PosScreenState extends ConsumerState<PosScreen> {
             ? (batchesWithStock..sort((a,b) => a.expiryDate.compareTo(b.expiryDate))).first 
             : (batches.isNotEmpty ? batches.first : null);
 
+        final isPack = bestBatch != null && bestBatch.packSize > 1;
+        final packPrice = bestBatch != null ? bestBatch.salePrice * bestBatch.packSize : 0.0;
+        final unitPrice = bestBatch?.salePrice ?? 0.0;
+
         // Determine stock badge color and text
         Color badgeColor;
         Color badgeBgColor;
-        Color badgeBorderColor;
         String badgeText;
         IconData? badgeIcon;
         
         if (isOutOfStock) {
           badgeColor = Colors.red.shade700;
           badgeBgColor = Colors.red.shade50;
-          badgeBorderColor = Colors.red.shade200;
-          badgeText = totalStock <= 0 ? 'Out of Stock' : '$availableStock available';
-          badgeIcon = Icons.warning_amber_rounded;
+          badgeText = 'Out of Stock';
+          badgeIcon = Icons.cancel;
         } else if (isLowStock) {
-          badgeColor = Colors.orange.shade700;
+          badgeColor = Colors.orange.shade800;
           badgeBgColor = Colors.orange.shade50;
-          badgeBorderColor = Colors.orange.shade200;
-          badgeText = '$availableStock left';
+          badgeText = '$availableStock Left';
           badgeIcon = Icons.warning_amber_rounded;
         } else {
           badgeColor = Colors.green.shade700;
           badgeBgColor = Colors.green.shade50;
-          badgeBorderColor = Colors.green.shade200;
-          badgeText = '$availableStock in stock';
-          badgeIcon = null;
+          badgeText = '$availableStock In Stock';
+          badgeIcon = Icons.check_circle_outline;
         }
 
         return AnimatedContainer(
           duration: const Duration(milliseconds: 100),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(10),
             border: isSelected 
               ? Border.all(color: Colors.teal, width: 2) 
               : Border.all(color: Colors.grey.shade200),
-            boxShadow: isSelected 
-              ? [BoxShadow(color: Colors.teal.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))] 
-              : [const BoxShadow(color: Colors.black12, blurRadius: 1, offset: Offset(0, 1))],
+            boxShadow: [
+               BoxShadow(
+                 color: isSelected ? Colors.teal.withOpacity(0.15) : Colors.black.withOpacity(0.04), 
+                 blurRadius: isSelected ? 8 : 2, 
+                 offset: const Offset(0, 2)
+              )
+            ],
           ),
           child: Material(
             color: Colors.transparent,
             child: InkWell(
               // Always allow tap - warning dialog will handle low/zero stock
               onTap: batches.isNotEmpty ? () => _addProductToIndex(index, allMedicines) : null,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(10),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.all(12),
                 child: Row(
                   children: [
+                    // Icon / Image Placeholder
                     Container(
-                      padding: const EdgeInsets.all(8),
+                      width: 48,
+                      height: 48,
                       decoration: BoxDecoration(
-                        color: hasAnyStock ? Colors.teal.withOpacity(0.1) : Colors.grey.shade100,
+                        color: hasAnyStock ? Colors.teal.shade50 : Colors.grey.shade100,
                         shape: BoxShape.circle,
+                        image: (medicine.imageUrl != null && medicine.imageUrl!.isNotEmpty)
+                            ? DecorationImage(
+                                image: medicine.imageUrl!.startsWith('http') 
+                                    ? NetworkImage(medicine.imageUrl!) 
+                                    : FileImage(File(medicine.imageUrl!)) as ImageProvider,
+                                fit: BoxFit.cover
+                              )
+                            : null,
                       ),
-                      child: Icon(
-                        Icons.medication, 
-                        color: hasAnyStock ? Colors.teal : Colors.grey,
-                        size: 24,
-                      ),
+                      child: (medicine.imageUrl == null || medicine.imageUrl!.isEmpty)
+                          ? Icon(
+                              Icons.medication_liquid, 
+                              color: hasAnyStock ? Colors.teal : Colors.grey,
+                              size: 24,
+                            )
+                          : null,
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 12),
+                    
+                    // Product Info
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -795,72 +845,72 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                               fontSize: 15,
                               color: hasAnyStock ? Colors.black87 : Colors.grey,
                             ),
+                            maxLines: 1, overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 2),
+                          if (medicine.subtitle != null && medicine.subtitle!.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text(
+                                medicine.subtitle!,
+                                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                                maxLines: 1, overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          const SizedBox(height: 6),
                           Row(
                             children: [
-                               Text(medicine.mainCategory ?? 'Medicine', style: TextStyle(fontSize: 12, color: hasAnyStock ? Colors.teal.shade700 : Colors.grey)),
-                               if (medicine.code != null) ...[
-                                 Padding(
-                                   padding: const EdgeInsets.symmetric(horizontal: 6), 
-                                   child: Icon(Icons.circle, size: 4, color: Colors.grey.shade400)
+                               Container(
+                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                 decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(4)),
+                                 child: Text(medicine.mainCategory ?? 'General', style: TextStyle(color: Colors.blue.shade700, fontSize: 10, fontWeight: FontWeight.bold)),
+                               ),
+                               const SizedBox(width: 8),
+                               Container(
+                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                 decoration: BoxDecoration(color: badgeBgColor, borderRadius: BorderRadius.circular(4)),
+                                 child: Row(
+                                   mainAxisSize: MainAxisSize.min,
+                                   children: [
+                                      if (badgeIcon != null) ...[Icon(badgeIcon, size: 10, color: badgeColor), const SizedBox(width: 3)],
+                                      Text(badgeText, style: TextStyle(color: badgeColor, fontSize: 10, fontWeight: FontWeight.bold)),
+                                   ],
                                  ),
-                                 Text('#${medicine.code}', style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontStyle: FontStyle.italic)),
-                               ],
-                               // Show in-cart indicator
-                               if (inCartQty > 0) ...[
-                                 Padding(
-                                   padding: const EdgeInsets.symmetric(horizontal: 6), 
-                                   child: Icon(Icons.circle, size: 4, color: Colors.grey.shade400)
-                                 ),
-                                 Container(
-                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                                   decoration: BoxDecoration(
-                                     color: Colors.blue.shade100,
-                                     borderRadius: BorderRadius.circular(8),
-                                   ),
-                                   child: Row(
-                                     mainAxisSize: MainAxisSize.min,
-                                     children: [
-                                       Icon(Icons.shopping_cart, size: 10, color: Colors.blue.shade700),
-                                       const SizedBox(width: 3),
-                                       Text('$inCartQty', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.blue.shade700)),
-                                     ],
-                                   ),
-                                 ),
-                               ],
+                               ),
                             ],
                           ),
                         ],
                       ),
                     ),
+                    
+                    // Pricing & Cart Indicator
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        if (bestBatch != null)
-                          Text('PKR ${bestBatch.salePrice.toStringAsFixed(0)}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: hasAnyStock ? Colors.teal : Colors.grey)),
-                        const SizedBox(height: 4),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: badgeBgColor,
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(color: badgeBorderColor),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (badgeIcon != null) ...[
-                                Icon(badgeIcon, size: 12, color: badgeColor),
-                                const SizedBox(width: 4),
-                              ],
-                              Text(
-                                badgeText, 
-                                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: badgeColor)
-                              ),
-                            ],
-                          ),
-                        ),
+                        if (bestBatch != null) ...[
+                          if (isPack) ...[
+                             Text('PKR ${packPrice.toStringAsFixed(0)}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.teal.shade800)),
+                             Text('Unit: ${unitPrice.toStringAsFixed(0)} (${bestBatch.packSize}/pk)', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                          ] else ...[
+                             Text('PKR ${unitPrice.toStringAsFixed(0)}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.teal.shade800)),
+                             Text('Per Unit', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                          ]
+                        ] else 
+                          const Text('N/A', style: TextStyle(color: Colors.grey)),
+                          
+                        if (inCartQty > 0) ...[
+                           const SizedBox(height: 4),
+                           Container(
+                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                             decoration: BoxDecoration(
+                               color: Colors.teal,
+                               borderRadius: BorderRadius.circular(12),
+                             ),
+                             child: Text(
+                               '$inCartQty in Cart', 
+                               style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                             ),
+                           ),
+                        ],
                       ],
                     ),
                   ],

@@ -171,11 +171,11 @@ class _MedicinesScreenState extends ConsumerState<MedicinesScreen> {
           width: double.infinity,
           child: DataTable(
             headingRowHeight: 56,
-            dataRowMinHeight: 64, // Increased height for details
-            dataRowMaxHeight: 64,
+            dataRowMinHeight: 72, // Increased height for details
+            dataRowMaxHeight: 72,
             columns: const [
               DataColumn(label: Text('ID')),
-              DataColumn(label: Text('Name')),
+              DataColumn(label: Text('Product')),
               DataColumn(label: Text('Category')),
               DataColumn(label: Text('Stock')),
               DataColumn(label: Text('Unit Price')),
@@ -189,7 +189,38 @@ class _MedicinesScreenState extends ConsumerState<MedicinesScreen> {
               
               return DataRow(cells: [
                 DataCell(Text('#${medicine.id}', style: const TextStyle(color: Colors.grey))),
-                DataCell(Text(medicine.name, style: const TextStyle(fontWeight: FontWeight.w500))),
+                DataCell(Row(
+                  children: [
+                    Container(
+                      width: 40, height: 40,
+                      margin: const EdgeInsets.only(right: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.teal.shade50, 
+                        shape: BoxShape.circle,
+                        image: (medicine.imageUrl != null && medicine.imageUrl!.isNotEmpty)
+                            ? DecorationImage(
+                                image: medicine.imageUrl!.startsWith('http') 
+                                    ? NetworkImage(medicine.imageUrl!) 
+                                    : FileImage(File(medicine.imageUrl!)) as ImageProvider,
+                                fit: BoxFit.cover
+                              )
+                            : null,
+                      ),
+                      child: (medicine.imageUrl == null || medicine.imageUrl!.isEmpty) 
+                          ? const Icon(Icons.medication, color: Colors.teal, size: 20) 
+                          : null,
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(medicine.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                        if (medicine.subtitle != null && medicine.subtitle!.isNotEmpty)
+                          Text(medicine.subtitle!, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                      ],
+                    ),
+                  ],
+                )),
                 DataCell(Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -224,7 +255,11 @@ class _MedicinesScreenState extends ConsumerState<MedicinesScreen> {
                         Text('${item.packSize} units/pack', style: const TextStyle(fontSize: 11, color: Colors.grey)),
                       ],
                     )
-                  : const Text('-', style: TextStyle(color: Colors.grey))
+                  : Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(4)),
+                      child: Text('Standard Unit', style: TextStyle(color: Colors.grey.shade600, fontSize: 11)),
+                    )
                 ),
                 DataCell(Row(
                   mainAxisSize: MainAxisSize.min,
@@ -256,61 +291,160 @@ class _MedicinesScreenState extends ConsumerState<MedicinesScreen> {
 
   Widget _buildMobileList(List<MedicineWithStock> items, MedicineRepository medicineRepo) {
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       itemCount: items.length,
       itemBuilder: (context, index) {
         final item = items[index];
         final medicine = item.medicine;
         final isPack = item.packSize > 1;
+        final packPrice = item.latestPrice * item.packSize;
         
         return Card(
+          elevation: 2,
           margin: const EdgeInsets.only(bottom: 12),
-          child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor: Colors.teal.shade50,
-              child: const Icon(Icons.medication, color: Colors.teal),
-            ),
-            title: Text(medicine.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Column(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 4),
-                Text('${medicine.mainCategory} > ${medicine.subCategory ?? '-'}'),
-                const SizedBox(height: 4),
+                // 1. Title & Subtitle + Action
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                       decoration: BoxDecoration(color: Colors.orange.shade50, borderRadius: BorderRadius.circular(4)),
-                       child: Text('Stock: ${item.totalQuantity}', style: TextStyle(color: Colors.orange.shade800, fontWeight: FontWeight.bold, fontSize: 12)),
+                      width: 50, height: 50,
+                      decoration: BoxDecoration(
+                        color: Colors.teal.shade50, 
+                        borderRadius: BorderRadius.circular(25),
+                        image: (medicine.imageUrl != null && medicine.imageUrl!.isNotEmpty)
+                            ? DecorationImage(
+                                image: medicine.imageUrl!.startsWith('http') 
+                                    ? NetworkImage(medicine.imageUrl!) 
+                                    : FileImage(File(medicine.imageUrl!)) as ImageProvider,
+                                fit: BoxFit.cover
+                              )
+                            : null,
+                      ),
+                      child: (medicine.imageUrl == null || medicine.imageUrl!.isEmpty) 
+                          ? const Icon(Icons.medication, color: Colors.teal) 
+                          : null,
                     ),
-                    const SizedBox(width: 8),
-                    Text('Unit: ${item.latestPrice.toStringAsFixed(2)}', style: const TextStyle(fontSize: 12)),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(medicine.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                          if (medicine.subtitle != null && medicine.subtitle!.isNotEmpty)
+                            Text(medicine.subtitle!, style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+                        ],
+                      ),
+                    ),
+                    PopupMenuButton(
+                      padding: EdgeInsets.zero,
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                        const PopupMenuItem(value: 'delete', child: Text('Delete')),
+                      ],
+                      onSelected: (value) {
+                         if (value == 'edit') {
+                           showDialog(context: context, builder: (context) => AddProductDialog(medicine: medicine));
+                         } else if (value == 'delete') {
+                           medicineRepo.deleteMedicine(medicine.id);
+                         }
+                      },
+                    ),
                   ],
                 ),
-                if (isPack)
-                   Padding(
-                     padding: const EdgeInsets.only(top: 4.0),
-                     child: Text('Pack: ${(item.latestPrice * item.packSize).toStringAsFixed(2)} (${item.packSize}/pack)', 
-                       style: TextStyle(color: Colors.blue.shade700, fontSize: 12, fontWeight: FontWeight.w500)),
-                   ),
+                const Divider(height: 20),
+                
+                // 2. Info Row: Category | Stock
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                     // Category Chip
+                     Container(
+                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                       decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(6)),
+                       child: Text(medicine.mainCategory ?? 'General', style: TextStyle(color: Colors.blue.shade800, fontSize: 12, fontWeight: FontWeight.w500)),
+                     ),
+                     // Stock
+                     Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: item.totalQuantity <= medicine.minStock ? Colors.red.shade50 : Colors.green.shade50, 
+                          borderRadius: BorderRadius.circular(6)
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.inventory_2_outlined, size: 14, color: item.totalQuantity <= medicine.minStock ? Colors.red : Colors.green),
+                            const SizedBox(width: 4),
+                            Text('${item.totalQuantity} Units', style: TextStyle(
+                              color: item.totalQuantity <= medicine.minStock ? Colors.red.shade800 : Colors.green.shade800, 
+                              fontWeight: FontWeight.bold, fontSize: 12
+                            )),
+                          ],
+                        ),
+                     ),
+                  ],
+                ),
+                
+                const SizedBox(height: 12),
+                
+                // 3. Pricing Row
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: isPack 
+                  ? Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween, // Spread out for pack
+                      children: [
+                         // Pack Price
+                         Expanded(
+                           child: Column(
+                             crossAxisAlignment: CrossAxisAlignment.center,
+                             children: [
+                               Text('Pack Price', style: TextStyle(fontSize: 11, color: Colors.grey.shade600, fontWeight: FontWeight.w500)),
+                               const SizedBox(height: 2),
+                               Text(packPrice.toStringAsFixed(2), style: TextStyle(color: Colors.teal.shade800, fontWeight: FontWeight.bold, fontSize: 15)),
+                               Text('(${item.packSize}/pk)', style: TextStyle(fontSize: 10, color: Colors.grey.shade500)),
+                             ],
+                           ),
+                         ),
+                         Container(width: 1, height: 30, color: Colors.grey.shade300),
+                         
+                         // Unit Price
+                         Expanded(
+                           child: Column(
+                             crossAxisAlignment: CrossAxisAlignment.center,
+                             children: [
+                               Text('Unit Price', style: TextStyle(fontSize: 11, color: Colors.grey.shade600, fontWeight: FontWeight.w500)),
+                               const SizedBox(height: 2),
+                               Text(item.latestPrice.toStringAsFixed(2), style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w600, fontSize: 15)),
+                             ],
+                           ),
+                         ),
+                      ],
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center, // Center for single
+                      children: [
+                         Column(
+                           children: [
+                             Text('Standard Unit Price', style: TextStyle(fontSize: 11, color: Colors.grey.shade600, fontWeight: FontWeight.w500)),
+                             const SizedBox(height: 2),
+                             Text(item.latestPrice.toStringAsFixed(2), style: const TextStyle(color: Colors.blueGrey, fontWeight: FontWeight.bold, fontSize: 16)),
+                           ],
+                         ),
+                      ],
+                    ),
+                ),
               ],
-            ),
-            trailing: PopupMenuButton(
-              itemBuilder: (context) => [
-                const PopupMenuItem(value: 'edit', child: Text('Edit')),
-                const PopupMenuItem(value: 'delete', child: Text('Delete')),
-              ],
-              onSelected: (value) {
-                if (value == 'edit') {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AddProductDialog(medicine: medicine),
-                  );
-                } else if (value == 'delete') {
-                  medicineRepo.deleteMedicine(medicine.id);
-                }
-              },
             ),
           ),
         );

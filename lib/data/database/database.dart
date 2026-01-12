@@ -44,6 +44,8 @@ class Categories extends Table {
 class Medicines extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text()();
+  TextColumn get subtitle => text().nullable()(); // Added in v9
+  TextColumn get imageUrl => text().nullable()(); // Added in v10
   TextColumn get code => text().unique()(); // Barcode/Unique ID
   TextColumn get mainCategory => text().withDefault(const Constant('General'))(); // Category name
   TextColumn get subCategory => text().nullable()(); // Subcategory name
@@ -58,6 +60,7 @@ class Batches extends Table {
   IntColumn get medicineId => integer().references(Medicines, #id)();
   TextColumn get batchNumber => text()();
   DateTimeColumn get expiryDate => dateTime()();
+  DateTimeColumn get mfgDate => dateTime().nullable()(); // Added in v8
   RealColumn get purchasePrice => real()();
   RealColumn get salePrice => real()();
   IntColumn get quantity => integer()(); // Current stock in this batch
@@ -106,7 +109,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 7; // Changed to 7
+  int get schemaVersion => 10; // Changed to 10
 
   @override
   MigrationStrategy get migration {
@@ -138,10 +141,17 @@ class AppDatabase extends _$AppDatabase {
           } catch (e) { /* ignore */ }
         }
         if (from < 7) {
-          // Add packSize to Batches
-          try {
-            await m.addColumn(batches, batches.packSize);
-          } catch (e) { /* ignore */ }
+          try { await m.addColumn(batches, batches.packSize); } catch (e) { /* ignore */ }
+        }
+        if (from < 8) {
+          try { await m.addColumn(batches, batches.mfgDate); } catch (e) { /* ignore */ }
+        }
+        if (from < 9) {
+          try { await m.addColumn(medicines, medicines.subtitle); } catch (e) { /* ignore */ }
+        }
+        if (from < 10) {
+          // Add imageUrl to Medicines
+          try { await m.addColumn(medicines, medicines.imageUrl); } catch (e) { /* ignore */ }
         }
       },
     );

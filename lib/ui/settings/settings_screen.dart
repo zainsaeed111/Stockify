@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:file_picker/file_picker.dart';
@@ -8,6 +9,7 @@ import '../../data/repositories/user_repository.dart';
 import '../../data/repositories/shop_repository.dart';
 import '../../data/providers/current_shop_provider.dart';
 import '../../data/database/database.dart';
+import '../theme/app_theme.dart';
 import 'category_management_screen.dart';
 import 'pos_settings_screen.dart';
 import 'product_form_settings_screen.dart';
@@ -114,21 +116,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             _buildSectionHeader('Business Information'),
             Card(
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(24.0),
                 child: Column(
                   children: [
                     if (businessData != null) ...[
                       Container(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.teal.shade50,
-                          borderRadius: BorderRadius.circular(8),
+                          color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         child: Row(
                           children: [
-                            const CircleAvatar(
-                              backgroundColor: Colors.teal,
-                              child: Icon(Icons.business, color: Colors.white),
+                            CircleAvatar(
+                              backgroundColor: Theme.of(context).colorScheme.primary,
+                              child: Icon(Icons.business, color: Theme.of(context).colorScheme.onPrimary),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
@@ -137,78 +139,82 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 children: [
                                   Text(
                                     businessData['shopName'] ?? 'Business',
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                    style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 16),
                                   ),
                                   Text(
                                     businessData['email'] ?? '',
-                                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                                    style: GoogleFonts.inter(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12),
                                   ),
                                 ],
                               ),
                             ),
-                            const Icon(Icons.verified, color: Colors.teal),
+                            Icon(Icons.verified, color: Theme.of(context).colorScheme.primary),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
                     ] else ...[
                       Container(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.orange.shade50,
-                          borderRadius: BorderRadius.circular(8),
+                          color: Theme.of(context).colorScheme.error.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Row(
+                        child: Row(
                           children: [
-                            Icon(Icons.warning, color: Colors.orange),
-                            SizedBox(width: 8),
-                            Expanded(child: Text('No business data loaded. Please login again.')),
+                            Icon(Icons.warning, color: Theme.of(context).colorScheme.error),
+                            const SizedBox(width: 8),
+                            Expanded(child: Text('No business data loaded. Please login again.', style: GoogleFonts.inter())),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
                     ],
                     TextField(
                       controller: _businessNameController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Business Name',
-                        prefixIcon: Icon(Icons.business),
+                        labelStyle: GoogleFonts.inter(),
+                        prefixIcon: Icon(Icons.business, color: Theme.of(context).colorScheme.primary),
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     TextField(
                       controller: _ownerNameController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Owner Name',
-                        prefixIcon: Icon(Icons.person),
+                        labelStyle: GoogleFonts.inter(),
+                        prefixIcon: Icon(Icons.person, color: Theme.of(context).colorScheme.primary),
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     TextField(
                       controller: _phoneController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Phone Number',
-                        prefixIcon: Icon(Icons.phone),
+                        labelStyle: GoogleFonts.inter(),
+                        prefixIcon: Icon(Icons.phone, color: Theme.of(context).colorScheme.primary),
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     TextField(
                       controller: _addressController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Address',
-                        prefixIcon: Icon(Icons.location_on),
+                        labelStyle: GoogleFonts.inter(),
+                        prefixIcon: Icon(Icons.location_on, color: Theme.of(context).colorScheme.primary),
                       ),
                       maxLines: 2,
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
                         onPressed: _isUpdating ? null : _updateBusinessInfo,
                         icon: _isUpdating 
-                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                          : const Icon(Icons.save),
-                        label: const Text('Save Business Information'),
+                          ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.onPrimary)))
+                          : Icon(Icons.save, color: Theme.of(context).colorScheme.onPrimary),
+                        label: Text('Save Business Information', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
                       ),
                     ),
                   ],
@@ -222,16 +228,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             Card(
               child: ListTile(
                 leading: Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.purple.shade100,
-                    borderRadius: BorderRadius.circular(8),
+                    color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.category, color: Colors.purple),
+                  child: Icon(Icons.category, color: Theme.of(context).colorScheme.primary),
                 ),
-                title: const Text('Manage Categories'),
-                subtitle: const Text('Add custom categories & subcategories'),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                title: Text('Manage Categories', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                subtitle: Text('Add custom categories & subcategories', style: GoogleFonts.inter()),
+                trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -243,16 +249,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             Card(
               child: ListTile(
                 leading: Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.blue.shade100,
-                    borderRadius: BorderRadius.circular(8),
+                    color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.point_of_sale, color: Colors.blue),
+                  child: Icon(Icons.point_of_sale, color: Theme.of(context).colorScheme.secondary),
                 ),
-                title: const Text('Manage POS'),
-                subtitle: const Text('Configure Defaults (Tax, GST, Fees, Discount)'),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                title: Text('Manage POS', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                subtitle: Text('Configure Defaults (Tax, GST, Fees, Discount)', style: GoogleFonts.inter()),
+                trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -264,16 +270,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             Card(
               child: ListTile(
                 leading: Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.teal.shade100,
-                    borderRadius: BorderRadius.circular(8),
+                    color: Theme.of(context).colorScheme.tertiary?.withOpacity(0.1) ?? Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.input, color: Colors.teal),
+                  child: Icon(Icons.input, color: Theme.of(context).colorScheme.tertiary ?? Theme.of(context).colorScheme.primary),
                 ),
-                title: const Text('Product Entry Form'),
-                subtitle: const Text('Customize fields (Hide/Show)'),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                title: Text('Product Entry Form', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                subtitle: Text('Customize fields (Hide/Show)', style: GoogleFonts.inter()),
+                trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -287,23 +293,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             _buildSectionHeader('Data Management'),
             Card(
               child: ListTile(
-                leading: const Icon(Icons.backup),
-                title: const Text('Backup Database'),
-                subtitle: const Text('Save a copy of your data'),
+                leading: Icon(Icons.backup, color: Theme.of(context).colorScheme.primary),
+                title: Text('Backup Database', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                subtitle: Text('Save a copy of your data', style: GoogleFonts.inter()),
                 trailing: ElevatedButton(
                   onPressed: _backupDatabase,
-                  child: const Text('Backup'),
+                  child: Text('Backup', style: GoogleFonts.inter(fontWeight: FontWeight.w500)),
                 ),
               ),
             ),
             Card(
               child: ListTile(
-                leading: const Icon(Icons.restore),
-                title: const Text('Restore Database'),
-                subtitle: const Text('Restore from a backup file'),
+                leading: Icon(Icons.restore, color: Theme.of(context).colorScheme.primary),
+                title: Text('Restore Database', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                subtitle: Text('Restore from a backup file', style: GoogleFonts.inter()),
                 trailing: ElevatedButton(
                   onPressed: _restoreDatabase,
-                  child: const Text('Restore'),
+                  child: Text('Restore', style: GoogleFonts.inter(fontWeight: FontWeight.w500)),
                 ),
               ),
             ),
@@ -326,20 +332,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           final user = users[index];
                           return ListTile(
                             leading: CircleAvatar(child: Text(user.username[0].toUpperCase())),
-                            title: Text(user.username),
-                            subtitle: Text(user.role),
+                            title: Text(user.username, style: GoogleFonts.inter(fontWeight: FontWeight.w500)),
+                            subtitle: Text(user.role, style: GoogleFonts.inter()),
                             trailing: IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.red),
+                              icon: Icon(Icons.delete, color: Theme.of(context).colorScheme.error),
                               onPressed: () {},
                             ),
                           );
                         },
                       ),
                       Padding(
-                        padding: const EdgeInsets.all(8.0),
+                        padding: const EdgeInsets.all(16.0),
                         child: ElevatedButton.icon(
-                          icon: const Icon(Icons.add),
-                          label: const Text('Add User'),
+                          icon: Icon(Icons.add, color: Theme.of(context).colorScheme.onPrimary),
+                          label: Text('Add User', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
                           onPressed: () => _showAddUserDialog(context, userRepo),
                         ),
                       ),
@@ -356,8 +362,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Widget _buildSectionHeader(String title) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10.0),
-      child: Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.teal)),
+      padding: const EdgeInsets.only(bottom: 16.0, top: 8.0),
+      child: Text(title, style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.primary)),
     );
   }
 

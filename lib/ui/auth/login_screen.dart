@@ -17,7 +17,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _isLoading = false;
 
   Future<void> _login() async {
-    final key = _securityKeyController.text.trim();
+    // Remove all whitespace just in case user copied with spaces
+    final key = _securityKeyController.text.replaceAll(RegExp(r'\s+'), '');
     
     if (key.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -35,9 +36,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (businessData == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Invalid Security Key'), 
+            SnackBar(
+              content: Text('Invalid Security Key: "$key" not found.'), 
               backgroundColor: Colors.red,
+              duration: const Duration(seconds: 4),
             )
           );
           setState(() => _isLoading = false);
@@ -65,7 +67,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red)
+          SnackBar(
+            content: Text('Login Error: $e'), 
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          )
         );
         setState(() => _isLoading = false);
       }

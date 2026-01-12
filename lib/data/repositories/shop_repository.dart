@@ -145,29 +145,38 @@ class ShopRepository {
     }
 
     if (db == null) {
+      // If we are in a production app, this should probably be an error.
+      // But preserving existing logic of checking memory, but logging clearer.
       print('⚠️ FIREBASE NOT CONNECTED: Checking In-Memory Cache for key');
-      return findInMemory(); 
+      final found = findInMemory();
+      if (found == null) {
+        // Throwing specifically to let UI know
+        throw Exception('Firebase not connected and key not found locally.');
+      }
+      return found;
     }
 
     try {
+      print('🔍 Searching for key: "$securityKey"');
       final snapshot = await db
           .collection('shops')
           .where('securityKey', isEqualTo: securityKey)
           .limit(1)
           .get()
-          .timeout(const Duration(seconds: 5));
+          .timeout(const Duration(seconds: 10)); // Increased timeout
 
       if (snapshot.docs.isNotEmpty) {
+         print('✅ Found shop: ${snapshot.docs.first.id}');
          return snapshot.docs.first.data();
       }
       
-      // If not in DB, fallback to memory
-      return findInMemory();
+      print('❌ Key not found in Firestore.');
+      // Logic: If explicitly checked DB and not found, return null (Invalid Key).
+      return null;
 
     } catch (e) {
       print('⚠️ FIRESTORE TIMEOUT/ERROR: $e');
-      print('Fallback to In-Memory Cache.');
-      return findInMemory();
+      throw Exception('Connection failed: $e');
     }
   }
 
