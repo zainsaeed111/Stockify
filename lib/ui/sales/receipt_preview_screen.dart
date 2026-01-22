@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:printing/printing.dart';
+import '../theme/app_colors.dart';
 
 class ReceiptPreviewScreen extends StatelessWidget {
   final String title;
@@ -61,7 +62,7 @@ class ReceiptPreviewScreen extends StatelessWidget {
                         // Custom Header
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          color: Colors.teal,
+                          color: AppColors.primary,
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [

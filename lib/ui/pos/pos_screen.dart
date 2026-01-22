@@ -9,6 +9,7 @@ import '../../data/repositories/customer_repository.dart';
 import '../../data/database/database.dart';
 import '../../utils/sample_data_importer.dart';
 import '../theme/app_theme.dart';
+import '../theme/app_colors.dart';
 import 'cart_provider.dart';
 import 'checkout_dialog.dart';
 import 'customer_entry_dialog.dart';
@@ -103,7 +104,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
         
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('✅ Sample data loaded!'), backgroundColor: Colors.green),
+            const SnackBar(content: Text('✅ Sample data loaded!'), backgroundColor: AppColors.success),
           );
           setState(() {}); 
         }
@@ -189,7 +190,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
       if (sortedBatches.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No batches available for this product'), backgroundColor: Colors.red),
+            const SnackBar(content: Text('No batches available for this product'), backgroundColor: AppColors.error),
           );
         }
         return;
@@ -240,7 +241,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: Colors.red.shade700,
+                      color: AppColors.error.shade700,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: const Text('LOW STOCK', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
@@ -248,7 +249,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                 ],
               ],
             ), 
-            backgroundColor: availableStock <= 0 ? Colors.orange.shade700 : Colors.teal, 
+            backgroundColor: availableStock <= 0 ? AppColors.warning.shade700 : AppColors.primary, 
             duration: const Duration(milliseconds: 500),
             behavior: SnackBarBehavior.floating,
             width: 350,
@@ -420,9 +421,9 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                 Container(
                   color: Colors.white,
                   child: TabBar(
-                    labelColor: Colors.teal,
+                    labelColor: AppColors.primary,
                     unselectedLabelColor: Colors.grey,
-                    indicatorColor: Colors.teal,
+                    indicatorColor: AppColors.primary,
                     tabs: [
                       const Tab(text: 'Products'),
                       Tab(text: 'Cart (${cart.items.fold(0, (sum, item) => sum + item.quantity)})'),
@@ -484,7 +485,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
   
   Widget _buildTopBar(bool isMobile) {
     return Container(
-      color: Colors.teal,
+      color: AppColors.primary,
       child: SafeArea(
         bottom: false,
         child: Padding(
@@ -765,18 +766,18 @@ class _PosScreenState extends ConsumerState<PosScreen> {
         IconData? badgeIcon;
         
         if (isOutOfStock) {
-          badgeColor = Colors.red.shade700;
-          badgeBgColor = Colors.red.shade50;
+          badgeColor = AppColors.error.shade700;
+          badgeBgColor = AppColors.error.shade50;
           badgeText = 'Out of Stock';
           badgeIcon = Icons.cancel;
         } else if (isLowStock) {
-          badgeColor = Colors.orange.shade800;
-          badgeBgColor = Colors.orange.shade50;
+          badgeColor = AppColors.warning.shade800;
+          badgeBgColor = AppColors.warning.shade50;
           badgeText = '$availableStock Left';
           badgeIcon = Icons.warning_amber_rounded;
         } else {
-          badgeColor = Colors.green.shade700;
-          badgeBgColor = Colors.green.shade50;
+          badgeColor = AppColors.success;
+          badgeBgColor = const Color(0xFFF0FDF4);
           badgeText = '$availableStock In Stock';
           badgeIcon = Icons.check_circle_outline;
         }
@@ -787,11 +788,11 @@ class _PosScreenState extends ConsumerState<PosScreen> {
             color: Colors.white,
             borderRadius: BorderRadius.circular(10),
             border: isSelected 
-              ? Border.all(color: Colors.teal, width: 2) 
+              ? Border.all(color: AppColors.primary, width: 2) 
               : Border.all(color: Colors.grey.shade200),
             boxShadow: [
                BoxShadow(
-                 color: isSelected ? Colors.teal.withOpacity(0.15) : Colors.black.withOpacity(0.04), 
+                 color: isSelected ? AppColors.primary.withOpacity(0.15) : Colors.black.withOpacity(0.04), 
                  blurRadius: isSelected ? 8 : 2, 
                  offset: const Offset(0, 2)
               )
@@ -812,7 +813,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: hasAnyStock ? Colors.teal.shade50 : Colors.grey.shade100,
+                        color: hasAnyStock ? AppColors.primary.shade50 : Colors.grey.shade100,
                         shape: BoxShape.circle,
                         image: (medicine.imageUrl != null && medicine.imageUrl!.isNotEmpty)
                             ? DecorationImage(
@@ -826,7 +827,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                       child: (medicine.imageUrl == null || medicine.imageUrl!.isEmpty)
                           ? Icon(
                               Icons.medication_liquid, 
-                              color: hasAnyStock ? Colors.teal : Colors.grey,
+                              color: hasAnyStock ? AppColors.primary : Colors.grey,
                               size: 24,
                             )
                           : null,
@@ -861,8 +862,8 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                             children: [
                                Container(
                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                 decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(4)),
-                                 child: Text(medicine.mainCategory ?? 'General', style: TextStyle(color: Colors.blue.shade700, fontSize: 10, fontWeight: FontWeight.bold)),
+                                 decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.05), borderRadius: BorderRadius.circular(4)),
+                                 child: Text(medicine.mainCategory ?? 'General', style: const TextStyle(color: AppColors.primary, fontSize: 10, fontWeight: FontWeight.bold)),
                                ),
                                const SizedBox(width: 8),
                                Container(
@@ -888,10 +889,10 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                       children: [
                         if (bestBatch != null) ...[
                           if (isPack) ...[
-                             Text('PKR ${packPrice.toStringAsFixed(0)}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.teal.shade800)),
+                             Text('PKR ${packPrice.toStringAsFixed(0)}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.primary.shade800)),
                              Text('Unit: ${unitPrice.toStringAsFixed(0)} (${bestBatch.packSize}/pk)', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
                           ] else ...[
-                             Text('PKR ${unitPrice.toStringAsFixed(0)}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.teal.shade800)),
+                             Text('PKR ${unitPrice.toStringAsFixed(0)}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.primary.shade800)),
                              Text('Per Unit', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
                           ]
                         ] else 
@@ -902,7 +903,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                            Container(
                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                              decoration: BoxDecoration(
-                               color: Colors.teal,
+                               color: AppColors.primary,
                                borderRadius: BorderRadius.circular(12),
                              ),
                              child: Text(
@@ -939,7 +940,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                 const Text('Current Bill', style: TextStyle(fontWeight: FontWeight.bold)),
                 const Spacer(),
                 if (cart.items.isNotEmpty)
-                  TextButton.icon(onPressed: () { notifier.clear(); _amountReceivedController.clear(); setState(() => _changeReturn = 0.0); }, icon: const Icon(Icons.delete_outline, size: 16, color: Colors.red), label: const Text('Clear', style: TextStyle(color: Colors.red))),
+                  TextButton.icon(onPressed: () { notifier.clear(); _amountReceivedController.clear(); setState(() => _changeReturn = 0.0); }, icon: const Icon(Icons.delete_outline, size: 16, color: AppColors.error), label: const Text('Clear', style: TextStyle(color: AppColors.error))),
               ],
             ),
           ),
@@ -957,9 +958,9 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                     return Container(
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       decoration: hasWarning ? BoxDecoration(
-                        color: Colors.orange.shade50,
+                        color: AppColors.warning.shade50,
                         borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: Colors.orange.shade200),
+                        border: Border.all(color: AppColors.warning.shade200),
                       ) : null,
                       child: Padding(
                         padding: hasWarning ? const EdgeInsets.all(6) : EdgeInsets.zero,
@@ -973,14 +974,14 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                                   width: 90,
                                   height: 32,
                                   decoration: BoxDecoration(
-                                    border: Border.all(color: hasWarning ? Colors.orange.shade300 : Colors.grey.shade300), 
+                                    border: Border.all(color: hasWarning ? AppColors.warning.shade300 : Colors.grey.shade300), 
                                     borderRadius: BorderRadius.circular(4), 
                                     color: Colors.white,
                                   ),
                                   child: Row(
                                      children: [
                                        InkWell(onTap: () { if (item.quantity > 1) notifier.updateQuantity(item.batch.id, item.quantity - 1); else notifier.removeItem(item.batch.id); }, child: const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Icon(Icons.remove, size: 14))),
-                                       Expanded(child: Text('${item.quantity}', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, color: hasWarning ? Colors.orange.shade700 : Colors.black87))),
+                                       Expanded(child: Text('${item.quantity}', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, color: hasWarning ? AppColors.warning.shade700 : Colors.black87))),
                                        InkWell(onTap: () => notifier.updateQuantity(item.batch.id, item.quantity + 1), child: const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Icon(Icons.add, size: 14))),
                                      ],
                                   ),
@@ -999,7 +1000,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
                                     Text('PKR ${(item.quantity * item.batch.salePrice).toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                                    InkWell(onTap: () => notifier.removeItem(item.batch.id), child: const Icon(Icons.delete_outline, size: 16, color: Colors.red)),
+                                    InkWell(onTap: () => notifier.removeItem(item.batch.id), child: const Icon(Icons.delete_outline, size: 16, color: AppColors.error)),
                                   ],
                                 ),
                               ],
@@ -1009,11 +1010,11 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                               const SizedBox(height: 4),
                               Row(
                                 children: [
-                                  Icon(Icons.warning_amber_rounded, size: 14, color: Colors.orange.shade700),
+                                  Icon(Icons.warning_amber_rounded, size: 14, color: AppColors.warning.shade700),
                                   const SizedBox(width: 4),
                                   Text(
                                     'Stock: ${item.originalStock} | Shortage: ${item.shortage}',
-                                    style: TextStyle(fontSize: 10, color: Colors.orange.shade700, fontWeight: FontWeight.w500),
+                                    style: TextStyle(fontSize: 10, color: AppColors.warning.shade700, fontWeight: FontWeight.w500),
                                   ),
                                 ],
                               ),
@@ -1060,9 +1061,9 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                                Row(children: [
                                  const Text('Discount', style: TextStyle(color: Colors.grey)),
                                  const SizedBox(width: 4),
-                                 Icon(Icons.edit, size: 12, color: Colors.teal.shade300),
+                                 Icon(Icons.edit, size: 12, color: AppColors.primary.withOpacity(0.5)),
                                ]),
-                               Text('${cart.discountType == 'percent' ? '(${cart.discountValue.toStringAsFixed(0)}%) ' : ''}-${cart.discountAmount.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.red)),
+                               Text('${cart.discountType == 'percent' ? '(${cart.discountValue.toStringAsFixed(0)}%) ' : ''}-${cart.discountAmount.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.w500, color: AppColors.error)),
                              ],
                            ),
                          ),
@@ -1078,7 +1079,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                      crossAxisAlignment: CrossAxisAlignment.end,
                      children: [
                        const Text('Total', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                       Text('PKR ${cart.grandTotal.toStringAsFixed(0)}', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.teal)),
+                       Text('PKR ${cart.grandTotal.toStringAsFixed(0)}', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.primary)),
                      ],
                    ),
                  ],
@@ -1121,13 +1122,13 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                      child: Container(
                        height: 40,
                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                       decoration: BoxDecoration(color: _changeReturn < 0 ? Colors.red.shade50 : Colors.green.shade50, borderRadius: BorderRadius.circular(4), border: Border.all(color: _changeReturn < 0 ? Colors.red.shade200 : Colors.green.shade200)),
+                       decoration: BoxDecoration(color: _changeReturn < 0 ? AppColors.error.shade50 : AppColors.success.shade50, borderRadius: BorderRadius.circular(4), border: Border.all(color: _changeReturn < 0 ? AppColors.error.shade200 : AppColors.success.shade200)),
                        child: Column(
                          crossAxisAlignment: CrossAxisAlignment.center,
                          mainAxisAlignment: MainAxisAlignment.center,
                          children: [
-                           Text('Change', style: TextStyle(fontSize: 9, color: _changeReturn < 0 ? Colors.red : Colors.green.shade700)),
-                           Text('${_changeReturn.toStringAsFixed(0)}', style: TextStyle(fontWeight: FontWeight.bold, color: _changeReturn < 0 ? Colors.red : Colors.green.shade800, fontSize: 13)),
+                           Text('Change', style: TextStyle(fontSize: 9, color: _changeReturn < 0 ? AppColors.error : AppColors.success.shade700)),
+                           Text('${_changeReturn.toStringAsFixed(0)}', style: TextStyle(fontWeight: FontWeight.bold, color: _changeReturn < 0 ? AppColors.error : AppColors.success.shade800, fontSize: 13)),
                          ],
                        ),
                      ),
@@ -1143,7 +1144,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                  child: ElevatedButton(
                    onPressed: cart.items.isNotEmpty ? _handleCheckout : null,
                    style: ElevatedButton.styleFrom(
-                     backgroundColor: Colors.teal, 
+                     backgroundColor: AppColors.primary, 
                      foregroundColor: Colors.white, 
                      elevation: 2,
                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -1194,7 +1195,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                             padding: const EdgeInsets.symmetric(vertical: 8),
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
-                              color: selectedType == 'percent' ? Colors.teal : Colors.transparent,
+                              color: selectedType == 'percent' ? AppColors.primary : Colors.transparent,
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text('Percentage (%)', style: TextStyle(color: selectedType == 'percent' ? Colors.white : Colors.black87, fontWeight: FontWeight.bold)),
@@ -1208,7 +1209,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                             padding: const EdgeInsets.symmetric(vertical: 8),
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
-                              color: selectedType == 'fixed' ? Colors.teal : Colors.transparent,
+                              color: selectedType == 'fixed' ? AppColors.primary : Colors.transparent,
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text('Fixed Amount', style: TextStyle(color: selectedType == 'fixed' ? Colors.white : Colors.black87, fontWeight: FontWeight.bold)),
@@ -1267,7 +1268,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
       onTap: () => setState(() => _paymentMode = mode),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 6),
-        decoration: BoxDecoration(color: isSelected ? Colors.teal : Colors.white, borderRadius: BorderRadius.circular(4), border: Border.all(color: isSelected ? Colors.teal : Colors.grey.shade300)),
+        decoration: BoxDecoration(color: isSelected ? AppColors.primary : Colors.white, borderRadius: BorderRadius.circular(4), border: Border.all(color: isSelected ? AppColors.primary : Colors.grey.shade300)),
         child: Column(children: [Icon(icon, size: 18, color: isSelected ? Colors.white : Colors.grey), const SizedBox(height: 4), Text(mode, style: TextStyle(fontSize: 11, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal, color: isSelected ? Colors.white : Colors.grey.shade700))]),
       ),
     );

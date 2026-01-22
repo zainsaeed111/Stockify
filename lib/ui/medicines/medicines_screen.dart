@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:billingly/utils/excel_product_importer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +11,7 @@ import 'package:drift/drift.dart' as drift;
 import '../../data/repositories/medicine_repository.dart';
 import '../../data/database/database.dart';
 import 'add_medicine_dialog.dart';
+import '../theme/app_colors.dart';
 
 class MedicinesScreen extends ConsumerStatefulWidget {
   const MedicinesScreen({super.key});
@@ -76,12 +79,24 @@ class _MedicinesScreenState extends ConsumerState<MedicinesScreen> {
               title: const Text('Products Management'),
               actions: [
                 Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: FloatingActionButton.small(
+                    heroTag: 'import_excel',
+                    tooltip: 'Import from Excel (products.xlsx)',
+                    onPressed: () => _importExcel(context, ref),
+                    backgroundColor: Colors.white,
+                    foregroundColor: AppColors.secondary,
+                    child: const Icon(Icons.table_view),
+                  ),
+                ),
+                Padding(
                   padding: const EdgeInsets.only(right: 16.0),
                   child: FloatingActionButton.small(
                     heroTag: 'import',
+                    tooltip: 'Import from CSV',
                     onPressed: () => _importCsv(context, ref),
                     backgroundColor: Colors.white,
-                    foregroundColor: Colors.teal,
+                    foregroundColor: AppColors.primary,
                     child: const Icon(Icons.upload_file),
                   ),
                 ),
@@ -92,7 +107,7 @@ class _MedicinesScreenState extends ConsumerState<MedicinesScreen> {
                 // Search Bar
                 Container(
                   padding: const EdgeInsets.all(16),
-                  color: Colors.teal,
+                  color: AppColors.primary,
                   child: TextField(
                     focusNode: _searchFocus,
                     decoration: InputDecoration(
@@ -153,7 +168,7 @@ class _MedicinesScreenState extends ConsumerState<MedicinesScreen> {
               onPressed: _handleAddProduct,
               icon: const Icon(Icons.add),
               label: const Text('Add Product (Ctrl+N)'),
-              backgroundColor: Colors.teal,
+              backgroundColor: AppColors.primary,
             ),
           ),
         ),
@@ -195,7 +210,7 @@ class _MedicinesScreenState extends ConsumerState<MedicinesScreen> {
                       width: 40, height: 40,
                       margin: const EdgeInsets.only(right: 8),
                       decoration: BoxDecoration(
-                        color: Colors.teal.shade50, 
+                        color: const Color(0xFFEEF2FF), 
                         shape: BoxShape.circle,
                         image: (medicine.imageUrl != null && medicine.imageUrl!.isNotEmpty)
                             ? DecorationImage(
@@ -207,7 +222,7 @@ class _MedicinesScreenState extends ConsumerState<MedicinesScreen> {
                             : null,
                       ),
                       child: (medicine.imageUrl == null || medicine.imageUrl!.isEmpty) 
-                          ? const Icon(Icons.medication, color: Colors.teal, size: 20) 
+                          ? const Icon(Icons.medication, color: AppColors.primary, size: 20) 
                           : null,
                     ),
                     Column(
@@ -227,8 +242,8 @@ class _MedicinesScreenState extends ConsumerState<MedicinesScreen> {
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(4)),
-                      child: Text(medicine.mainCategory ?? '-', style: TextStyle(color: Colors.blue.shade700, fontSize: 12)),
+                      decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.05), borderRadius: BorderRadius.circular(4)),
+                      child: Text(medicine.mainCategory ?? '-', style: TextStyle(color: AppColors.primary, fontSize: 12)),
                     ),
                     if (medicine.subCategory != null)
                       Text(medicine.subCategory!, style: TextStyle(color: Colors.grey.shade600, fontSize: 11)),
@@ -237,11 +252,11 @@ class _MedicinesScreenState extends ConsumerState<MedicinesScreen> {
                 DataCell(Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (item.totalQuantity <= medicine.minStock) const Icon(Icons.warning_amber, color: Colors.red, size: 16),
+                    if (item.totalQuantity <= medicine.minStock) const Icon(Icons.warning_amber, color: AppColors.error, size: 16),
                     if (item.totalQuantity <= medicine.minStock) const SizedBox(width: 4),
                     Text(item.totalQuantity.toString(), style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: item.totalQuantity <= medicine.minStock ? Colors.red : Colors.black87
+                      color: item.totalQuantity <= medicine.minStock ? AppColors.error : Colors.black87
                     )),
                   ],
                 )),
@@ -265,7 +280,7 @@ class _MedicinesScreenState extends ConsumerState<MedicinesScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.edit_outlined, color: Colors.blue, size: 20),
+                      icon: const Icon(Icons.edit_outlined, color: AppColors.primary, size: 20),
                       tooltip: 'Edit',
                       onPressed: () {
                         showDialog(
@@ -275,7 +290,7 @@ class _MedicinesScreenState extends ConsumerState<MedicinesScreen> {
                       },
                     ),
                     IconButton(
-                      icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                      icon: const Icon(Icons.delete_outline, color: AppColors.error, size: 20),
                       tooltip: 'Delete',
                       onPressed: () => medicineRepo.deleteMedicine(medicine.id),
                     ),
@@ -315,7 +330,7 @@ class _MedicinesScreenState extends ConsumerState<MedicinesScreen> {
                     Container(
                       width: 50, height: 50,
                       decoration: BoxDecoration(
-                        color: Colors.teal.shade50, 
+                        color: const Color(0xFFEEF2FF), 
                         borderRadius: BorderRadius.circular(25),
                         image: (medicine.imageUrl != null && medicine.imageUrl!.isNotEmpty)
                             ? DecorationImage(
@@ -327,7 +342,7 @@ class _MedicinesScreenState extends ConsumerState<MedicinesScreen> {
                             : null,
                       ),
                       child: (medicine.imageUrl == null || medicine.imageUrl!.isEmpty) 
-                          ? const Icon(Icons.medication, color: Colors.teal) 
+                          ? const Icon(Icons.medication, color: AppColors.primary) 
                           : null,
                     ),
                     const SizedBox(width: 12),
@@ -366,22 +381,22 @@ class _MedicinesScreenState extends ConsumerState<MedicinesScreen> {
                      // Category Chip
                      Container(
                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                       decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(6)),
-                       child: Text(medicine.mainCategory ?? 'General', style: TextStyle(color: Colors.blue.shade800, fontSize: 12, fontWeight: FontWeight.w500)),
+                       decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.05), borderRadius: BorderRadius.circular(6)),
+                       child: Text(medicine.mainCategory ?? 'General', style: TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.w500)),
                      ),
                      // Stock
                      Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: item.totalQuantity <= medicine.minStock ? Colors.red.shade50 : Colors.green.shade50, 
+                          color: item.totalQuantity <= medicine.minStock ? AppColors.error.shade50 : AppColors.success.shade50, 
                           borderRadius: BorderRadius.circular(6)
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.inventory_2_outlined, size: 14, color: item.totalQuantity <= medicine.minStock ? Colors.red : Colors.green),
+                            Icon(Icons.inventory_2_outlined, size: 14, color: item.totalQuantity <= medicine.minStock ? AppColors.error : AppColors.success),
                             const SizedBox(width: 4),
                             Text('${item.totalQuantity} Units', style: TextStyle(
-                              color: item.totalQuantity <= medicine.minStock ? Colors.red.shade800 : Colors.green.shade800, 
+                              color: item.totalQuantity <= medicine.minStock ? AppColors.error.shade800 : AppColors.success.shade800, 
                               fontWeight: FontWeight.bold, fontSize: 12
                             )),
                           ],
@@ -411,7 +426,7 @@ class _MedicinesScreenState extends ConsumerState<MedicinesScreen> {
                              children: [
                                Text('Pack Price', style: TextStyle(fontSize: 11, color: Colors.grey.shade600, fontWeight: FontWeight.w500)),
                                const SizedBox(height: 2),
-                               Text(packPrice.toStringAsFixed(2), style: TextStyle(color: Colors.teal.shade800, fontWeight: FontWeight.bold, fontSize: 15)),
+                               Text(packPrice.toStringAsFixed(2), style: const TextStyle(color: AppColors.primaryDark, fontWeight: FontWeight.bold, fontSize: 15)),
                                Text('(${item.packSize}/pk)', style: TextStyle(fontSize: 10, color: Colors.grey.shade500)),
                              ],
                            ),
@@ -438,7 +453,7 @@ class _MedicinesScreenState extends ConsumerState<MedicinesScreen> {
                            children: [
                              Text('Standard Unit Price', style: TextStyle(fontSize: 11, color: Colors.grey.shade600, fontWeight: FontWeight.w500)),
                              const SizedBox(height: 2),
-                             Text(item.latestPrice.toStringAsFixed(2), style: const TextStyle(color: Colors.blueGrey, fontWeight: FontWeight.bold, fontSize: 16)),
+                             Text(item.latestPrice.toStringAsFixed(2), style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 16)),
                            ],
                          ),
                       ],
@@ -488,6 +503,53 @@ class _MedicinesScreenState extends ConsumerState<MedicinesScreen> {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Import Failed: $e')));
+      }
+    }
+  }
+
+  void _importExcel(BuildContext context, WidgetRef ref) async {
+    try {
+      // First check if products.xlsx exists in the project root
+      // In a real mobile app, we'd use file picker, but the user specifically mentioned products.xlsx
+      // We'll try to use file picker first but default to looking for products.xlsx if possible.
+      
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['xlsx'],
+      );
+
+      String? path;
+      if (result != null) {
+        path = result.files.single.path;
+      } else {
+        // Fallback for desktop/dev environment if the file is in current directory
+        final file = File('products.xlsx');
+        if (await file.exists()) {
+          path = file.path;
+        }
+      }
+
+      if (path != null) {
+        if (context.mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Importing from Excel...')));
+        }
+        
+        final db = ref.read(databaseProvider);
+        final importer = ExcelProductImporter(db);
+        final results = await importer.importProducts(path);
+        
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Import Success: ${results['imported']} new, ${results['updated']} updated'),
+              backgroundColor: AppColors.success,
+            )
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Excel Import Failed: $e'), backgroundColor: AppColors.error));
       }
     }
   }

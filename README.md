@@ -1,6 +1,6 @@
-# Stockify
+# Billingly
 
-A new Flutter project.
+A premium billing and inventory management system.
 
 ## Getting Started
 

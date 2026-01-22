@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import '../../data/repositories/category_repository.dart';
 import '../../data/database/database.dart';
+import '../theme/app_colors.dart';
 
 class CategoryManagementScreen extends ConsumerStatefulWidget {
   const CategoryManagementScreen({super.key});
@@ -61,7 +62,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
         );
       }
     }
@@ -107,11 +108,9 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: isSubcategory 
-                        ? [Colors.orange.shade400, Colors.deepOrange.shade400]
-                        : [Colors.teal.shade400, Colors.cyan.shade400],
-                  ),
+                  gradient: isSubcategory 
+                      ? LinearGradient(colors: [AppColors.secondary.shade200, AppColors.secondary])
+                      : AppColors.primaryGradient,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -180,7 +179,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
                                 right: 4,
                                 child: CircleAvatar(
                                   radius: 14,
-                                  backgroundColor: Colors.red,
+                                  backgroundColor: AppColors.error,
                                   child: IconButton(
                                     padding: EdgeInsets.zero,
                                     icon: const Icon(Icons.close, size: 14, color: Colors.white),
@@ -232,7 +231,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
             ),
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
-                backgroundColor: isSubcategory ? Colors.orange : Colors.teal,
+                backgroundColor: isSubcategory ? AppColors.secondary : AppColors.primary,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -275,7 +274,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(category != null ? 'Updated!' : 'Added!'),
-                    backgroundColor: Colors.green,
+                    backgroundColor: AppColors.success,
                   ),
                 );
               },
@@ -298,10 +297,10 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.red.shade100,
+                color: AppColors.error.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(Icons.delete_forever, color: Colors.red.shade700),
+              child: const Icon(Icons.delete_forever, color: AppColors.error),
             ),
             const SizedBox(width: 12),
             const Text('Delete?'),
@@ -319,17 +318,17 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.red.shade50,
+                  color: AppColors.error.shade50,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.warning, color: Colors.red.shade700),
+                    const Icon(Icons.warning, color: AppColors.error),
                     const SizedBox(width: 8),
                     const Expanded(
                       child: Text(
                         'This will also delete all subcategories!',
-                        style: TextStyle(fontSize: 12, color: Colors.red),
+                        style: TextStyle(fontSize: 12, color: AppColors.error),
                       ),
                     ),
                   ],
@@ -344,7 +343,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
             child: const Text('Cancel'),
           ),
           ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
             onPressed: () async {
               final repo = ref.read(categoryRepositoryProvider);
               await repo.deleteCategory(category.id);
@@ -353,7 +352,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
               _loadCategories();
               
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Deleted!'), backgroundColor: Colors.red),
+                const SnackBar(content: Text('Deleted!'), backgroundColor: AppColors.error),
               );
             },
             icon: const Icon(Icons.delete, color: Colors.white),
@@ -375,11 +374,11 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isSelected ? Colors.teal : Colors.grey.shade200,
+          color: isSelected ? AppColors.primary : Colors.grey.shade200,
           width: isSelected ? 2 : 1,
         ),
         boxShadow: isSelected
-            ? [BoxShadow(color: Colors.teal.withOpacity(0.2), blurRadius: 8, offset: const Offset(0, 4))]
+            ? [BoxShadow(color: AppColors.primary.withOpacity(0.2), blurRadius: 8, offset: const Offset(0, 4))]
             : [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))],
       ),
       child: ClipRRect(
@@ -415,7 +414,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
                               : LinearGradient(
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
-                                  colors: [Colors.teal.shade300, Colors.cyan.shade400],
+                                  colors: [AppColors.primaryLight, AppColors.primary],
                                 ),
                           image: category.imageUrl != null && category.imageUrl!.isNotEmpty
                               ? DecorationImage(
@@ -464,17 +463,17 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
                       
                       // Action Buttons
                       IconButton(
-                        icon: Icon(Icons.add, color: Colors.teal.shade400),
+                        icon: const Icon(Icons.add, color: AppColors.primary),
                         tooltip: 'Add Subcategory',
                         onPressed: () => _showCategoryDialog(parent: category, isSubcategory: true),
                       ),
                       IconButton(
-                        icon: Icon(Icons.edit, color: Colors.blue.shade400),
+                        icon: Icon(Icons.edit, color: AppColors.primary),
                         tooltip: 'Edit',
                         onPressed: () => _showCategoryDialog(category: category),
                       ),
                       IconButton(
-                        icon: Icon(Icons.delete, color: Colors.red.shade400),
+                        icon: Icon(Icons.delete, color: AppColors.error),
                         tooltip: 'Delete',
                         onPressed: () => _showDeleteConfirmation(category),
                       ),
@@ -520,7 +519,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
               height: 40,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
-                color: sub.imageUrl != null && sub.imageUrl!.isNotEmpty ? null : Colors.orange.shade100,
+                color: sub.imageUrl != null && sub.imageUrl!.isNotEmpty ? null : AppColors.secondary.withOpacity(0.1),
                 image: sub.imageUrl != null && sub.imageUrl!.isNotEmpty
                     ? DecorationImage(
                         image: FileImage(File(sub.imageUrl!)),
@@ -529,7 +528,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
                     : null,
               ),
               child: sub.imageUrl == null || sub.imageUrl!.isEmpty
-                  ? Icon(Icons.label, color: Colors.orange.shade700, size: 20)
+                  ? const Icon(Icons.label, color: AppColors.secondary, size: 20)
                   : null,
             ),
             const SizedBox(width: 12),
@@ -553,11 +552,11 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
             
             // Actions
             IconButton(
-              icon: Icon(Icons.edit, size: 18, color: Colors.blue.shade400),
+              icon: Icon(Icons.edit, size: 18, color: AppColors.primary),
               onPressed: () => _showCategoryDialog(category: sub, parent: parent, isSubcategory: true),
             ),
             IconButton(
-              icon: Icon(Icons.delete, size: 18, color: Colors.red.shade400),
+              icon: Icon(Icons.delete, size: 18, color: AppColors.error),
               onPressed: () => _showDeleteConfirmation(sub, isSubcategory: true),
             ),
           ],
@@ -574,7 +573,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.teal.shade50, Colors.white],
+            colors: [const Color(0xFFEEF2FF), Colors.white],
             stops: const [0.0, 0.3],
           ),
         ),
@@ -594,9 +593,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Colors.teal.shade400, Colors.cyan.shade400],
-                        ),
+                        gradient: AppColors.primaryGradient,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(Icons.category, color: Colors.white),
@@ -637,10 +634,10 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
                                 Container(
                                   padding: const EdgeInsets.all(24),
                                   decoration: BoxDecoration(
-                                    color: Colors.teal.shade50,
+                                    color: const Color(0xFFEEF2FF),
                                     shape: BoxShape.circle,
                                   ),
-                                  child: Icon(Icons.category_outlined, size: 64, color: Colors.teal.shade300),
+                                  child: const Icon(Icons.category_outlined, size: 64, color: AppColors.primary),
                                 ),
                                 const SizedBox(height: 24),
                                 const Text(
@@ -655,7 +652,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
                                 const SizedBox(height: 24),
                                 ElevatedButton.icon(
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.teal,
+                                    backgroundColor: AppColors.primary,
                                     foregroundColor: Colors.white,
                                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -679,7 +676,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
       ),
       floatingActionButton: _mainCategories.isNotEmpty
           ? FloatingActionButton.extended(
-              backgroundColor: Colors.teal,
+              backgroundColor: AppColors.primary,
               onPressed: () => _showCategoryDialog(),
               icon: const Icon(Icons.add, color: Colors.white),
               label: const Text('Add Category', style: TextStyle(color: Colors.white)),

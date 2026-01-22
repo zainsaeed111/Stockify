@@ -5,6 +5,7 @@ import '../../data/repositories/shop_repository.dart';
 import '../../data/providers/current_shop_provider.dart';
 import '../dashboard/dashboard_screen.dart';
 import 'owner_login_screen.dart';
+import '../theme/app_colors.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -39,7 +40,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Invalid Security Key: "$key" not found.'), 
-              backgroundColor: Colors.red,
+              backgroundColor: AppColors.error,
               duration: const Duration(seconds: 4),
             )
           );
@@ -62,7 +63,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Welcome to $businessName, $ownerName!'),
-            backgroundColor: Colors.green,
+            backgroundColor: AppColors.success,
           )
         );
         Navigator.pushReplacement(context, MaterialPageRoute(
@@ -74,7 +75,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Login Error: $e'), 
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.error,
             duration: const Duration(seconds: 5),
           )
         );
@@ -99,9 +100,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.receipt_long, size: 64, color: Color(0xFF6366F1)),
+                    const Icon(Icons.receipt_long, size: 64, color: AppColors.primary),
                     const SizedBox(height: 16),
-                    const Text('Billingly', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF6366F1))),
+                    const Text('Billingly', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.primary)),
                     const SizedBox(height: 8),
                     const Text('Business Owner Login', style: TextStyle(color: Colors.grey)),
                     const SizedBox(height: 32),
@@ -151,7 +152,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
                   ),
                   child: IconButton(
-                    icon: const Icon(Icons.admin_panel_settings, color: Color(0xFF6366F1), size: 28),
+                    icon: const Icon(Icons.admin_panel_settings, color: AppColors.primary, size: 28),
                     tooltip: 'Super Admin',
                     onPressed: () {
                       Navigator.push(context, MaterialPageRoute(builder: (_) => const OwnerLoginScreen()));
@@ -159,7 +160,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text('Admin', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF6366F1))),
+                const Text('Admin', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primary)),
               ],
             ),
           ),

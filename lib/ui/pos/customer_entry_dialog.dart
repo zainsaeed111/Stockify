@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/customer_repository.dart';
 import '../../data/database/database.dart';
+import '../theme/app_colors.dart';
 
 class CustomerEntryDialog extends ConsumerStatefulWidget {
   final Customer? initialCustomer;
@@ -105,7 +106,7 @@ class _CustomerEntryDialogState extends ConsumerState<CustomerEntryDialog> {
                       children: [
                         const Text(
                           'Customer Information',
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.teal),
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.primary),
                         ),
                         IconButton(
                           onPressed: () => Navigator.pop(context),
@@ -197,7 +198,7 @@ class _CustomerEntryDialogState extends ConsumerState<CustomerEntryDialog> {
                         ElevatedButton(
                           onPressed: _handleSubmit,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.teal,
+                            backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                           ),

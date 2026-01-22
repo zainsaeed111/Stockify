@@ -153,7 +153,7 @@ class SalePdfGenerator {
                     // Table Header
                     pw.Container(
                       decoration: const pw.BoxDecoration(
-                        color: PdfColors.grey300,
+                        color: PdfColor.fromInt(0xFFEEF2FF),
                         borderRadius: pw.BorderRadius.only(
                           topLeft: pw.Radius.circular(3),
                           topRight: pw.Radius.circular(3),
@@ -214,7 +214,7 @@ class SalePdfGenerator {
                       _buildTotalRow(
                         'Discount${(discountType == 'percent' && discountValue != null) ? ' (${discountValue.toStringAsFixed(0)}%)' : ''}', 
                         '- PKR ${sale.discount.toStringAsFixed(0)}', 
-                        color: PdfColors.green700
+                        color: PdfColor.fromInt(0xFF10B981) // Brand Success
                       ),
                     if (sale.tax > 0)
                       _buildTotalRow(
@@ -230,7 +230,7 @@ class SalePdfGenerator {
                       margin: const pw.EdgeInsets.symmetric(vertical: 6),
                       padding: const pw.EdgeInsets.symmetric(vertical: 8, horizontal: 8),
                       decoration: pw.BoxDecoration(
-                        color: PdfColors.grey800,
+                        color: PdfColor.fromInt(0xFF4F46E5), // Brand Primary (Indigo 600)
                         borderRadius: pw.BorderRadius.circular(4),
                       ),
                       child: pw.Row(
@@ -318,7 +318,7 @@ class SalePdfGenerator {
               pw.SizedBox(height: 8),
               pw.Divider(thickness: 0.5),
               pw.Text(
-                'Powered by Stockify',
+                'Powered by Billingly',
                 style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey500),
               ),
             ],

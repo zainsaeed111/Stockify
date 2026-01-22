@@ -1,4 +1,5 @@
 import 'dart:io';
+import '../theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -341,7 +342,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
       if (context.mounted) {
          if (_selectedExistingMedicine == null) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Product Added Successfully!'), backgroundColor: Colors.teal),
+              const SnackBar(content: Text('Product Added Successfully!'), backgroundColor: AppColors.success),
             );
          }
          Navigator.pop(context);
@@ -420,7 +421,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                           children: [
                             Text(
                               isEditing ? 'Update Inventory' : 'New Product',
-                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.blueGrey.shade800),
+                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: AppColors.primary),
                             ),
                             IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
                           ],
@@ -495,9 +496,9 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                                 Container(
                                   padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
-                                    color: Colors.blueGrey.shade50.withOpacity(0.5),
+                                    color: AppColors.primary.withOpacity(0.05),
                                     borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: Colors.blueGrey.shade100),
+                                    border: Border.all(color: AppColors.primary.withOpacity(0.1)),
                                   ),
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -531,7 +532,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                                       const SizedBox(height: 16),
                                       
                                       // 3. Common/Result Fields
-                                      Text('Unit Details (Final)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.blueGrey.shade600)),
+                                      Text('Unit Details (Final)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.primary)),
                                       const SizedBox(height: 8),
                                       
                                       // Qty & Unit Price
@@ -577,7 +578,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                                        
                                        // Dates
                                        if (_showMfgDate || _showExpiryDate) ...[
-                                         Text('Dates', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.blueGrey.shade600)),
+                                         Text('Dates', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.primary)),
                                          const SizedBox(height: 8),
                                        ],
                                        
@@ -684,7 +685,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                             ElevatedButton.icon(
                               onPressed: _handleSubmit,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.teal,
+                                backgroundColor: AppColors.primary,
                                 foregroundColor: Colors.white,
                                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                               ),
@@ -756,7 +757,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Pack Configuration', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.blueGrey.shade600)),
+        Text('Pack Configuration', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.primary)),
         const SizedBox(height: 8),
         isMobile 
         ? Column(
@@ -886,8 +887,8 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                icon: const Icon(Icons.upload_file, size: 18),
                label: const Text('Upload'),
                style: OutlinedButton.styleFrom(
-                   foregroundColor: Colors.blueGrey.shade700,
-                   side: BorderSide(color: Colors.blueGrey.shade200),
+                   foregroundColor: AppColors.primary,
+                   side: BorderSide(color: AppColors.primary.withOpacity(0.5)),
                ),
              ),
              
@@ -899,7 +900,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                  : const Icon(Icons.auto_awesome, size: 18),
                label: Text(_isGeneratingImage ? 'Generating...' : 'Auto Generate'),
                style: ElevatedButton.styleFrom(
-                   backgroundColor: Colors.deepPurpleAccent,
+                   backgroundColor: AppColors.secondary,
                    foregroundColor: Colors.white,
                ),
              ),
@@ -908,7 +909,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
            if (_isGeneratingImage)
              Padding(
                padding: const EdgeInsets.only(top: 8),
-               child: Text('Consulting Gemini AI...', style: TextStyle(fontSize: 10, color: Colors.deepPurpleAccent.shade200, fontStyle: FontStyle.italic)),
+               child: Text('Consulting Gemini AI...', style: TextStyle(fontSize: 10, color: AppColors.secondary.shade200, fontStyle: FontStyle.italic)),
              ),
         ],
       ),
@@ -953,7 +954,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
     });
   }  
   Widget _buildSectionTitle(String title) {
-    return Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.teal));
+    return Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary));
   }
 
   Widget _buildNameField() {

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../data/repositories/sale_repository.dart';
 import '../../data/database/database.dart';
+import '../theme/app_colors.dart';
 
 class SalesHistoryScreen extends ConsumerWidget {
   const SalesHistoryScreen({super.key});
@@ -82,7 +83,7 @@ class SalesHistoryScreen extends ConsumerWidget {
                             );
                           },
                         )),
-                        DataCell(Text('PKR ${sale.grandTotal.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.teal))),
+                        DataCell(Text('PKR ${sale.grandTotal.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary))),
                         DataCell(IconButton(
                           icon: const Icon(Icons.print_outlined, color: Colors.grey),
                           tooltip: 'Reprint Receipt',
@@ -126,7 +127,7 @@ class SalesHistoryScreen extends ConsumerWidget {
                     ),
                     Text(
                       'PKR ${sale.grandTotal.toStringAsFixed(0)}',
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.teal, fontSize: 16),
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary, fontSize: 16),
                     ),
                   ],
                 ),
@@ -153,7 +154,7 @@ class SalesHistoryScreen extends ConsumerWidget {
                         },
                      ),
                      IconButton(
-                        icon: const Icon(Icons.print, size: 20, color: Colors.blueGrey),
+                        icon: const Icon(Icons.print, size: 20, color: AppColors.primary),
                         constraints: const BoxConstraints(),
                         padding: EdgeInsets.zero,
                         tooltip: 'Reprint',

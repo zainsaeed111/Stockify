@@ -9,6 +9,7 @@ import '../reports/reports_screen.dart';
 import '../settings/settings_screen.dart';
 import '../auth/login_screen.dart';
 import '../../data/providers/current_shop_provider.dart';
+import '../theme/app_colors.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -43,7 +44,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       builder: (ctx) => AlertDialog(
         title: const Row(
           children: [
-            Icon(Icons.logout, color: Colors.red),
+            Icon(Icons.logout, color: AppColors.error),
             SizedBox(width: 8),
             Text('Logout'),
           ],
@@ -55,7 +56,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
             onPressed: () async {
               // Clear session
               final prefs = await SharedPreferences.getInstance();
@@ -112,7 +113,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             child: Padding(
                               padding: const EdgeInsets.only(bottom: 20),
                               child: IconButton(
-                                icon: const Icon(Icons.logout, color: Colors.red),
+                                icon: const Icon(Icons.logout, color: AppColors.error),
                                 tooltip: 'Logout',
                                 onPressed: () => _showLogoutDialog(context),
                               ),
@@ -203,10 +204,10 @@ class _DashboardHome extends ConsumerWidget {
                   childAspectRatio: 1.5,
                   physics: const NeverScrollableScrollPhysics(),
                   children: [
-                    _buildStatCard(context, 'Total Sales', 'PKR 25,400', Icons.attach_money, const Color(0xFF6366F1), const Color(0xFF818CF8)),
-                    _buildStatCard(context, 'Low Stock', '12 Items', Icons.warning_amber_rounded, const Color(0xFFEF5350), const Color(0xFFE57373)),
-                    _buildStatCard(context, 'Pending Orders', '5', Icons.shopping_cart_outlined, const Color(0xFFFF9800), const Color(0xFFFFB74D)),
-                    _buildStatCard(context, 'Active Users', '3', Icons.people_outline, const Color(0xFF2196F3), const Color(0xFF64B5F6)),
+                    _buildStatCard(context, 'Total Sales', 'PKR 25,400', Icons.attach_money, AppColors.primary, AppColors.primary.withOpacity(0.7)),
+                    _buildStatCard(context, 'Low Stock', '12 Items', Icons.warning_amber_rounded, AppColors.error, AppColors.error.withOpacity(0.7)),
+                    _buildStatCard(context, 'Pending Orders', '5', Icons.shopping_cart_outlined, AppColors.warning, AppColors.warning.withOpacity(0.7)),
+                    _buildStatCard(context, 'Active Users', '3', Icons.people_outline, AppColors.secondary, AppColors.secondary.withOpacity(0.7)),
                   ],
                 );
               },

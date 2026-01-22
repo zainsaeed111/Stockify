@@ -9,6 +9,7 @@ import '../../data/repositories/user_repository.dart';
 import '../../data/repositories/shop_repository.dart';
 import '../../data/providers/current_shop_provider.dart';
 import '../../data/database/database.dart';
+import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
 import 'category_management_screen.dart';
 import 'pos_settings_screen.dart';
@@ -54,7 +55,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final businessData = ref.read(currentShopProvider);
     if (businessData == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No business data available'), backgroundColor: Colors.red)
+        const SnackBar(content: Text('No business data available'), backgroundColor: AppColors.error)
       );
       return;
     }
@@ -81,13 +82,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Business information updated!'), backgroundColor: Colors.green)
+          const SnackBar(content: Text('Business information updated!'), backgroundColor: AppColors.success)
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red)
+          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error)
         );
       }
     } finally {

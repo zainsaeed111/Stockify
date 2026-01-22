@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/providers/current_shop_provider.dart';
 import '../../data/repositories/shop_repository.dart';
+import '../theme/app_colors.dart';
 
 class PosSettingsScreen extends ConsumerStatefulWidget {
   const PosSettingsScreen({super.key});
@@ -102,7 +103,7 @@ class _PosSettingsScreenState extends ConsumerState<PosSettingsScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error updating settings: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Error updating settings: $e'), backgroundColor: AppColors.error),
         );
       }
     } finally {
@@ -115,7 +116,7 @@ class _PosSettingsScreenState extends ConsumerState<PosSettingsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Manage POS Settings'),
-        backgroundColor: Colors.teal,
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
@@ -172,7 +173,7 @@ class _PosSettingsScreenState extends ConsumerState<PosSettingsScreen> {
                  child: ElevatedButton.icon(
                    onPressed: _isSaving ? null : _saveSettings,
                    style: ElevatedButton.styleFrom(
-                     backgroundColor: Colors.teal,
+                     backgroundColor: AppColors.primary,
                      foregroundColor: Colors.white,
                    ),
                    icon: _isSaving 
@@ -199,7 +200,7 @@ class _PosSettingsScreenState extends ConsumerState<PosSettingsScreen> {
           children: [
             Row(
                children: [
-                 Icon(icon, color: Colors.teal),
+                 Icon(icon, color: AppColors.primary),
                  const SizedBox(width: 8),
                  Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                ],
@@ -276,7 +277,7 @@ class _PosSettingsScreenState extends ConsumerState<PosSettingsScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: isSelected ? Colors.teal : Colors.transparent,
+          color: isSelected ? AppColors.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(7),
         ),
         child: Text(

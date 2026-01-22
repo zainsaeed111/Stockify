@@ -7,6 +7,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import '../../data/repositories/sale_repository.dart';
 import '../../data/database/database.dart';
+import '../theme/app_colors.dart';
 
 class ReportsScreen extends ConsumerWidget {
   const ReportsScreen({super.key});
@@ -71,7 +72,7 @@ class ReportsScreen extends ConsumerWidget {
                         return BarChartGroupData(
                           x: entry.key.millisecondsSinceEpoch,
                           barRods: [
-                            BarChartRodData(toY: entry.value, color: Colors.teal, width: 16),
+                            BarChartRodData(toY: entry.value, color: AppColors.primary, width: 16),
                           ],
                         );
                       }).toList(),

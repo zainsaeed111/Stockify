@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 
 /// Result of the stock warning dialog
 class StockWarningResult {
@@ -72,12 +73,12 @@ class _StockWarningDialogState extends State<StockWarningDialog> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: isOutOfStock ? Colors.red.shade100 : Colors.orange.shade100,
+              color: isOutOfStock ? AppColors.error.withOpacity(0.1) : AppColors.warning.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
               isOutOfStock ? Icons.remove_shopping_cart : Icons.warning_amber_rounded,
-              color: isOutOfStock ? Colors.red.shade700 : Colors.orange.shade700,
+              color: isOutOfStock ? AppColors.error : AppColors.warning,
               size: 24,
             ),
           ),
@@ -85,7 +86,7 @@ class _StockWarningDialogState extends State<StockWarningDialog> {
           Text(
             isOutOfStock ? 'Out of Stock' : 'Low Stock Warning',
             style: TextStyle(
-              color: isOutOfStock ? Colors.red.shade700 : Colors.orange.shade700,
+              color: isOutOfStock ? AppColors.error : AppColors.warning,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -107,7 +108,7 @@ class _StockWarningDialogState extends State<StockWarningDialog> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.medication, color: Colors.teal),
+                  const Icon(Icons.medication, color: AppColors.primary),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -127,7 +128,7 @@ class _StockWarningDialogState extends State<StockWarningDialog> {
             _buildStockRow(
               'Available Stock',
               '${widget.availableStock} units',
-              widget.availableStock > 0 ? Colors.green : Colors.red,
+              widget.availableStock > 0 ? AppColors.success : AppColors.error,
               Icons.inventory_2,
             ),
             const SizedBox(height: 8),
@@ -135,7 +136,7 @@ class _StockWarningDialogState extends State<StockWarningDialog> {
               _buildStockRow(
                 'Already in Cart',
                 '${widget.alreadyInCart} units',
-                Colors.blue,
+                AppColors.secondary,
                 Icons.shopping_cart,
               ),
               const SizedBox(height: 8),
@@ -143,7 +144,7 @@ class _StockWarningDialogState extends State<StockWarningDialog> {
             _buildStockRow(
               'Adding',
               '${widget.requestedQuantity} unit(s)',
-              Colors.teal,
+              AppColors.primary,
               Icons.add_circle,
             ),
             
@@ -153,19 +154,19 @@ class _StockWarningDialogState extends State<StockWarningDialog> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.red.shade50,
+                  color: AppColors.error.shade50,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.red.shade200),
+                  border: Border.all(color: AppColors.error.shade200),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.error_outline, color: Colors.red.shade700, size: 20),
+                    Icon(Icons.error_outline, color: AppColors.error, size: 20),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'Shortage: $shortage unit(s) will be oversold',
                         style: TextStyle(
-                          color: Colors.red.shade700,
+                          color: AppColors.error,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -179,21 +180,21 @@ class _StockWarningDialogState extends State<StockWarningDialog> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.amber.shade50,
+                color: AppColors.warning.shade50,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.amber.shade200),
+                border: Border.all(color: AppColors.warning.shade200),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.info_outline, color: Colors.amber.shade800, size: 20),
+                  Icon(Icons.info_outline, color: AppColors.warning, size: 20),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'You can still proceed with billing. Stock will be updated after checkout.',
                       style: TextStyle(
                         fontSize: 13,
-                        color: Colors.amber.shade900,
+                        color: AppColors.warning.shade900,
                       ),
                     ),
                   ),
@@ -216,7 +217,7 @@ class _StockWarningDialogState extends State<StockWarningDialog> {
                       child: Checkbox(
                         value: _dontShowAgain,
                         onChanged: (v) => setState(() => _dontShowAgain = v ?? false),
-                        activeColor: Colors.teal,
+                        activeColor: AppColors.primary,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
                       ),
                     ),
@@ -245,7 +246,7 @@ class _StockWarningDialogState extends State<StockWarningDialog> {
         ElevatedButton.icon(
           onPressed: () => Navigator.pop(context, StockWarningResult(proceed: true, dontShowAgain: _dontShowAgain)),
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.teal,
+            backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           ),

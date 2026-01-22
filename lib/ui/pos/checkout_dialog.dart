@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' as drift;
@@ -77,7 +78,7 @@ class _CheckoutDialogState extends ConsumerState<CheckoutDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Amount received is less than total'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.error,
           ),
         );
         return;
@@ -198,9 +199,9 @@ class _CheckoutDialogState extends ConsumerState<CheckoutDialog> {
       icon: Icon(icon, size: 18),
       label: Text(mode),
       style: OutlinedButton.styleFrom(
-        backgroundColor: isSelected ? Colors.teal : Colors.white,
-        foregroundColor: isSelected ? Colors.white : Colors.teal,
-        side: BorderSide(color: Colors.teal, width: isSelected ? 2 : 1),
+        backgroundColor: isSelected ? AppColors.primary : Colors.white,
+        foregroundColor: isSelected ? Colors.white : AppColors.primary,
+        side: BorderSide(color: AppColors.primary, width: isSelected ? 2 : 1),
         padding: const EdgeInsets.symmetric(vertical: 12),
       ),
     );
@@ -225,7 +226,7 @@ class _CheckoutDialogState extends ConsumerState<CheckoutDialog> {
           child: AlertDialog(
             title: Row(
               children: [
-                const Icon(Icons.payment, color: Colors.teal),
+                const Icon(Icons.payment, color: AppColors.primary),
                 const SizedBox(width: 8),
                 const Text('Complete Sale'),
               ],
@@ -242,12 +243,12 @@ class _CheckoutDialogState extends ConsumerState<CheckoutDialog> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.teal.shade50,
+                          color: const Color(0xFFEEF2FF),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.person, size: 20, color: Colors.teal),
+                            const Icon(Icons.person, size: 20, color: AppColors.primary),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Column(
@@ -290,7 +291,7 @@ class _CheckoutDialogState extends ConsumerState<CheckoutDialog> {
                             style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
-                              color: Colors.teal,
+                              color: AppColors.primary,
                             ),
                           ),
                         ],
@@ -348,10 +349,10 @@ class _CheckoutDialogState extends ConsumerState<CheckoutDialog> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: _change >= 0 ? Colors.green.shade50 : Colors.red.shade50,
+                          color: _change >= 0 ? AppColors.success.withOpacity(0.05) : AppColors.error.withOpacity(0.05),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: _change >= 0 ? Colors.green : Colors.red,
+                            color: _change >= 0 ? AppColors.success : AppColors.error,
                             width: 1,
                           ),
                         ),
@@ -359,11 +360,10 @@ class _CheckoutDialogState extends ConsumerState<CheckoutDialog> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              _change >= 0 ? 'Change:' : 'Underpaid:',
+                              _change >= 0 ? 'Change' : 'Balance Due',
                               style: TextStyle(
-                                fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: _change >= 0 ? Colors.green.shade900 : Colors.red.shade900,
+                                color: _change >= 0 ? AppColors.success : AppColors.error,
                               ),
                             ),
                             Text(
@@ -371,7 +371,7 @@ class _CheckoutDialogState extends ConsumerState<CheckoutDialog> {
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: _change >= 0 ? Colors.green.shade900 : Colors.red.shade900,
+                                color: _change >= 0 ? AppColors.success : AppColors.error,
                               ),
                             ),
                           ],
@@ -381,19 +381,19 @@ class _CheckoutDialogState extends ConsumerState<CheckoutDialog> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.blue.shade50,
+                          color: AppColors.primary.withOpacity(0.05),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.info_outline, color: Colors.blue.shade700, size: 20),
+                            Icon(Icons.info_outline, color: AppColors.primary, size: 20),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 'Exact amount will be charged via $_paymentMode',
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 12,
-                                  color: Colors.blue.shade900,
+                                  color: AppColors.primary,
                                 ),
                               ),
                             ),
@@ -412,7 +412,7 @@ class _CheckoutDialogState extends ConsumerState<CheckoutDialog> {
               ),
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.teal,
+                  backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/settings_repository.dart';
+import '../theme/app_colors.dart';
 
 class ProductFormSettingsScreen extends ConsumerStatefulWidget {
   const ProductFormSettingsScreen({super.key});
@@ -63,7 +64,7 @@ class _ProductFormSettingsScreenState extends ConsumerState<ProductFormSettingsS
     return Scaffold(
       appBar: AppBar(
         title: const Text('Product Form Settings'),
-        backgroundColor: Colors.teal,
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
       body: _isLoading 
@@ -92,12 +93,12 @@ class _ProductFormSettingsScreenState extends ConsumerState<ProductFormSettingsS
                 const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(8)),
+                  decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.05), borderRadius: BorderRadius.circular(8)),
                   child: Row(
                     children: const [
-                       Icon(Icons.info, color: Colors.blue),
+                       Icon(Icons.info, color: AppColors.primary),
                        SizedBox(width: 12),
-                       Expanded(child: Text('Hidden fields will use default values (e.g. 0 for price, current date for expiry).', style: TextStyle(color: Colors.blue))),
+                       Expanded(child: Text('Hidden fields will use default values (e.g. 0 for price, current date for expiry).', style: TextStyle(color: AppColors.primary))),
                     ],
                   ),
                 ),
@@ -115,7 +116,7 @@ class _ProductFormSettingsScreenState extends ConsumerState<ProductFormSettingsS
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-             Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.teal)),
+             Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primary)),
              const Divider(),
              ...children,
           ],
@@ -129,7 +130,7 @@ class _ProductFormSettingsScreenState extends ConsumerState<ProductFormSettingsS
       title: Text(label),
       value: value,
       onChanged: onChanged,
-      activeColor: Colors.teal,
+      activeColor: AppColors.primary,
       contentPadding: EdgeInsets.zero,
     );
   }

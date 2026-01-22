@@ -7,6 +7,7 @@ import '../data/repositories/shop_repository.dart';
 import '../data/providers/current_shop_provider.dart';
 import 'auth/login_screen.dart';
 import 'dashboard/dashboard_screen.dart';
+import 'theme/app_colors.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -41,7 +42,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
     );
 
     _scaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
-      CurvedAnimation(parent: _mainController, curve: const Interval(0.0, 0.8, curve: Curves.outBack)),
+      CurvedAnimation(parent: _mainController, curve: const Interval(0.0, 0.8, curve: Curves.easeOutBack)),
     );
 
     _slideAnimation = Tween<double>(begin: 50.0, end: 0.0).animate(
@@ -107,15 +108,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
         width: double.infinity,
         height: double.infinity,
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF6366F1), // Indigo 500
-              Color(0xFF4F46E5), // Indigo 600
-              Color(0xFF3730A3), // Indigo 800
-            ],
-          ),
+          gradient: AppColors.primaryGradient,
         ),
         child: Stack(
           children: [
@@ -255,7 +248,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
                   offset: const Offset(0, 10),
                 ),
                 BoxShadow(
-                  color: const Color(0xFF6366F1).withOpacity(0.3),
+                  color: AppColors.primary.withOpacity(0.3),
                   blurRadius: 30,
                   offset: const Offset(0, 15),
                   spreadRadius: -5,
@@ -265,7 +258,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
             padding: const EdgeInsets.all(25),
             child: CustomPaint(
               painter: _BillinglyLogoPainter(
-                color: const Color(0xFF6366F1),
+                color: AppColors.primary,
               ),
             ),
           ),

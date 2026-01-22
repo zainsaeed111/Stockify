@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -90,7 +91,7 @@ class _ShopRegistrationScreenState extends ConsumerState<ShopRegistrationScreen>
       _showSuccessDialog(securityKey, shopOwnerEmail);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Registration Failed: $e'), backgroundColor: Colors.red)
+        SnackBar(content: Text('Registration Failed: $e'), backgroundColor: AppColors.error)
       );
     } finally {
        if (mounted) setState(() => _isLoading = false);
@@ -108,10 +109,10 @@ class _ShopRegistrationScreenState extends ConsumerState<ShopRegistrationScreen>
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.green.shade100,
+                color: AppColors.success.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.check_circle, color: Colors.green, size: 28),
+              child: const Icon(Icons.check_circle, color: AppColors.success, size: 28),
             ),
             const SizedBox(width: 12),
             const Text('Registration Successful'),
@@ -124,12 +125,12 @@ class _ShopRegistrationScreenState extends ConsumerState<ShopRegistrationScreen>
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.teal.shade50,
+                color: AppColors.primary.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.email, color: Colors.teal),
+                  const Icon(Icons.email, color: AppColors.primary),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -145,14 +146,14 @@ class _ShopRegistrationScreenState extends ConsumerState<ShopRegistrationScreen>
             ),
             const SizedBox(height: 16),
             const Text('🔑 Security Key (SAVE THIS!):', 
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red)),
+              style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.error)),
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.amber.shade50,
+                color: AppColors.warning.shade50,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.orange),
+                border: Border.all(color: AppColors.warning.shade200),
               ),
               child: Row(
                 children: [
@@ -163,12 +164,12 @@ class _ShopRegistrationScreenState extends ConsumerState<ShopRegistrationScreen>
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.copy, color: Colors.teal),
+                    icon: const Icon(Icons.copy, color: AppColors.primary),
                     tooltip: 'Copy',
                     onPressed: () {
                       Clipboard.setData(ClipboardData(text: securityKey));
                       ScaffoldMessenger.of(ctx).showSnackBar(
-                        const SnackBar(content: Text('✅ Copied!'), backgroundColor: Colors.green, duration: Duration(seconds: 1)),
+                        const SnackBar(content: Text('✅ Copied!'), backgroundColor: AppColors.success, duration: Duration(seconds: 1)),
                       );
                     },
                   ),
@@ -179,17 +180,17 @@ class _ShopRegistrationScreenState extends ConsumerState<ShopRegistrationScreen>
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.blue.shade50,
+                color: AppColors.primary.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Row(
                 children: [
-                  Icon(Icons.info_outline, color: Colors.blue, size: 20),
-                  SizedBox(width: 8),
-                  Expanded(
+                   Icon(Icons.info_outline, color: AppColors.primary, size: 20),
+                   SizedBox(width: 8),
+                   Expanded(
                     child: Text(
                       'Use email + security key to login to the business dashboard.',
-                      style: TextStyle(fontSize: 12),
+                      style: TextStyle(fontSize: 12, color: AppColors.primary),
                     ),
                   ),
                 ],
@@ -203,6 +204,7 @@ class _ShopRegistrationScreenState extends ConsumerState<ShopRegistrationScreen>
               Navigator.pop(ctx);
               Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const OwnerLoginScreen()));
             }, 
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
             icon: const Icon(Icons.login),
             label: const Text('Go to Login'),
           )
@@ -262,11 +264,7 @@ class _ShopRegistrationScreenState extends ConsumerState<ShopRegistrationScreen>
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Colors.teal.shade600, Colors.teal.shade400],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                      gradient: AppColors.primaryGradient,
                       borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(16),
                         topRight: Radius.circular(16),
@@ -453,20 +451,20 @@ class _ShopRegistrationScreenState extends ConsumerState<ShopRegistrationScreen>
                               child: Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                 decoration: BoxDecoration(
-                                  color: _isPaid ? Colors.green.shade50 : Colors.orange.shade50,
+                                  color: _isPaid ? AppColors.success.shade50 : AppColors.warning.shade50,
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: _isPaid ? Colors.green.shade200 : Colors.orange.shade200),
+                                  border: Border.all(color: _isPaid ? AppColors.success.shade200 : AppColors.warning.shade200),
                                 ),
                                 child: Row(
                                   children: [
                                     Icon(_isPaid ? Icons.check_circle : Icons.hourglass_bottom,
-                                      color: _isPaid ? Colors.green : Colors.orange, size: 20),
+                                      color: _isPaid ? AppColors.success : AppColors.warning, size: 20),
                                     const SizedBox(width: 8),
-                                    Expanded(child: Text(_isPaid ? 'Paid' : 'Trial', style: TextStyle(fontWeight: FontWeight.bold, color: _isPaid ? Colors.green.shade700 : Colors.orange.shade700))),
+                                    Expanded(child: Text(_isPaid ? 'Paid' : 'Trial', style: TextStyle(fontWeight: FontWeight.bold, color: _isPaid ? AppColors.success.shade700 : AppColors.warning.shade700))),
                                     Switch(
                                       value: _isPaid,
                                       onChanged: (val) => setState(() => _isPaid = val),
-                                      activeColor: Colors.green,
+                                      activeColor: AppColors.success,
                                     ),
                                   ],
                                 ),
@@ -482,7 +480,7 @@ class _ShopRegistrationScreenState extends ConsumerState<ShopRegistrationScreen>
                           child: ElevatedButton.icon(
                             onPressed: _isLoading ? null : _registerShop,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.teal,
+                              backgroundColor: AppColors.primary,
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
@@ -507,9 +505,9 @@ class _ShopRegistrationScreenState extends ConsumerState<ShopRegistrationScreen>
   Widget _buildSectionHeader(String title, IconData icon) {
     return Row(
       children: [
-        Icon(icon, color: Colors.teal, size: 20),
+        Icon(icon, color: AppColors.primary, size: 20),
         const SizedBox(width: 8),
-        Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.teal)),
+        Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primary)),
       ],
     );
   }
@@ -543,7 +541,7 @@ class _ShopRegistrationScreenState extends ConsumerState<ShopRegistrationScreen>
         ),
         child: Row(
           children: [
-            const Icon(Icons.calendar_today, size: 18, color: Colors.teal),
+            const Icon(Icons.calendar_today, size: 18, color: AppColors.primary),
             const SizedBox(width: 12),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,

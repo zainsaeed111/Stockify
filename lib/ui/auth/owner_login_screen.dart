@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'shop_registration_screen.dart';
+import '../theme/app_colors.dart';
 
 /// Super Admin credentials
 const String kSuperAdminEmail = 'iamzainofficial4211@gmail.com';
@@ -35,7 +36,7 @@ class _OwnerLoginScreenState extends ConsumerState<OwnerLoginScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('✅ Welcome, Super Admin!'),
-          backgroundColor: Colors.green,
+          backgroundColor: AppColors.success,
         )
       );
       Navigator.pushReplacement(context, MaterialPageRoute(
@@ -46,7 +47,7 @@ class _OwnerLoginScreenState extends ConsumerState<OwnerLoginScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('❌ Invalid password'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
         )
       );
     }
@@ -68,11 +69,11 @@ class _OwnerLoginScreenState extends ConsumerState<OwnerLoginScreen> {
               children: [
                 Container(
                   padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEEF2FF),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFEEF2FF),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.admin_panel_settings, size: 64, color: Color(0xFF6366F1)),
+                  child: const Icon(Icons.admin_panel_settings, size: 64, color: AppColors.primary),
                 ),
                 const SizedBox(height: 24),
                 const Text(
@@ -96,7 +97,7 @@ class _OwnerLoginScreenState extends ConsumerState<OwnerLoginScreen> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.email, color: Color(0xFF6366F1)),
+                      const Icon(Icons.email, color: AppColors.primary),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -104,7 +105,7 @@ class _OwnerLoginScreenState extends ConsumerState<OwnerLoginScreen> {
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
-                      const Icon(Icons.verified, color: Color(0xFF6366F1)),
+                      const Icon(Icons.verified, color: AppColors.primary),
                     ],
                   ),
                 ),
@@ -141,17 +142,17 @@ class _OwnerLoginScreenState extends ConsumerState<OwnerLoginScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
+                    color: AppColors.primary.withOpacity(0.05),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Row(
                     children: [
-                      Icon(Icons.info_outline, color: Colors.blue, size: 20),
+                      Icon(Icons.info_outline, color: AppColors.primary, size: 20),
                       SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           'Only the Super Admin can register new businesses.\nBusiness owners login from the main screen with their security key.',
-                          style: TextStyle(fontSize: 12, color: Colors.blue),
+                          style: TextStyle(fontSize: 12, color: AppColors.primary),
                         ),
                       ),
                     ],

@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'ui/dashboard/dashboard_screen.dart';
-import 'ui/auth/login_screen.dart';
 import 'ui/splash_screen.dart';
-import 'firebase_options.dart'; // Ensure this file is generated via 'flutterfire configure'
+import 'firebase_options.dart';
+import 'ui/theme/app_colors.dart'; // Ensure this file is generated via 'flutterfire configure'
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,14 +30,14 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF6366F1), // Indigo
-          secondary: const Color(0xFF8B5CF6), // Violet
-          surface: const Color(0xFFF8F9FA),
-          background: const Color(0xFFF8F9FA),
+          seedColor: AppColors.primary,
+          secondary: AppColors.secondary,
+          surface: AppColors.background,
+          background: AppColors.background,
         ),
-        scaffoldBackgroundColor: const Color(0xFFF8F9FA),
+        scaffoldBackgroundColor: AppColors.background,
         appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF6366F1),
+          backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           elevation: 0,
           centerTitle: true,
@@ -80,17 +79,17 @@ class MyApp extends StatelessWidget {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12), 
-            borderSide: const BorderSide(color: Color(0xFF6366F1), width: 2),
+            borderSide: const BorderSide(color: AppColors.primary, width: 2),
           ),
           filled: true,
           fillColor: Colors.white,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           labelStyle: const TextStyle(color: Colors.grey),
-          prefixIconColor: const Color(0xFF6366F1),
+          prefixIconColor: AppColors.primary,
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF6366F1),
+            backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -99,7 +98,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
         floatingActionButtonTheme: const FloatingActionButtonThemeData(
-          backgroundColor: Color(0xFF6366F1),
+          backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           elevation: 4,
         ),

@@ -1,22 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'app_colors.dart';
 
 class AppTheme {
   static ThemeData get lightTheme {
     // Define modern color palette
-    const primaryColor = Color(0xFF2563EB); // Modern blue
-    const secondaryColor = Color(0xFF0EA5E9); // Modern teal/cyan
-    const accentColor = Color(0xFF8B5CF6); // Purple accent
-    const successColor = Color(0xFF10B981); // Green
-    const warningColor = Color(0xFFF59E0B); // Amber
-    const errorColor = Color(0xFFEF4444); // Red
+    // Define modern color palette using centralized AppColors
+    const primaryColor = AppColors.primary;
+    const secondaryColor = AppColors.secondary;
+    const accentColor = AppColors.accent;
+    const successColor = AppColors.success;
+    const warningColor = AppColors.warning;
+    const errorColor = AppColors.error;
     
     // Gradient definitions
-    const primaryGradient = LinearGradient(
-      colors: [primaryColor, Color(0xFF3B82F6)],
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-    );
+    const primaryGradient = AppColors.primaryGradient;
     
     const cardGradient = LinearGradient(
       colors: [Color(0xFFFFFFFF), Color(0xFFFEFEFE)],
@@ -30,13 +28,13 @@ class AppTheme {
         seedColor: primaryColor,
         primary: primaryColor,
         secondary: secondaryColor,
-        surface: const Color(0xFFF8FAFC), // Light grey-blue background
-        background: const Color(0xFFF8FAFC),
+        surface: AppColors.background,
+        background: AppColors.background,
         error: errorColor,
         onError: Colors.white,
         brightness: Brightness.light,
       ),
-      scaffoldBackgroundColor: const Color(0xFFF8FAFC),
+      scaffoldBackgroundColor: AppColors.background,
       
       // App Bar Theme
       appBarTheme: AppBarTheme(
@@ -299,8 +297,8 @@ class AppTheme {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          startColor ?? const Color(0xFF2563EB),
-          endColor ?? const Color(0xFF3B82F6),
+          startColor ?? AppColors.primary,
+          endColor ?? AppColors.primaryDark,
         ],
       ),
       borderRadius: BorderRadius.circular(borderRadius),
