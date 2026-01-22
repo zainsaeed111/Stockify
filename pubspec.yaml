@@ -52,6 +52,7 @@ dependencies:
   cloud_firestore: ^6.1.0
   email_otp: ^3.0.2
   image_picker: ^1.2.1
+  shared_preferences: ^2.5.4
 
 dev_dependencies:
   flutter_test:

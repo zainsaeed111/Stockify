@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/repositories/shop_repository.dart';
 import '../../data/providers/current_shop_provider.dart';
 import '../dashboard/dashboard_screen.dart';
@@ -49,6 +50,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
       // Store business data in provider for use throughout the app
       ref.read(currentShopProvider.notifier).setShop(businessData);
+
+      // Save key for persistent login
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('security_key', key);
 
       // Success! Login
       if (mounted) {

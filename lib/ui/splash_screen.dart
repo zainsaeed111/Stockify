@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../data/repositories/shop_repository.dart';
+import '../data/providers/current_shop_provider.dart';
 import 'auth/login_screen.dart';
+import 'dashboard/dashboard_screen.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
@@ -32,12 +37,43 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     );
 
     _controller.forward();
+    _checkLoginState();
+  }
 
-    Timer(const Duration(seconds: 3), () {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
-      );
-    });
+  Future<void> _checkLoginState() async {
+    // wait for animation/min splash duration
+    await Future.delayed(const Duration(seconds: 2));
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedKey = prefs.getString('security_key');
+
+      if (savedKey != null && savedKey.isNotEmpty) {
+        if (!mounted) return;
+        
+        final repo = ref.read(shopRepositoryProvider);
+        // Attempt to fetch fresh data for the saved key
+        final shopData = await repo.getShopBySecurityKey(savedKey);
+
+        if (shopData != null && mounted) {
+           // Valid key - Restore session
+           ref.read(currentShopProvider.notifier).setShop(shopData);
+           
+           Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const DashboardScreen()),
+          );
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint('Auto-login failed: $e');
+      // Fallthrough to login screen on error
+    }
+
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+    );
   }
 
   @override
