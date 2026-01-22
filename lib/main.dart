@@ -26,19 +26,19 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Medical Billing',
+      title: 'Billingly',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF009688), // Teal
-          secondary: const Color(0xFF2196F3), // Blue
+          seedColor: const Color(0xFF6366F1), // Indigo
+          secondary: const Color(0xFF8B5CF6), // Violet
           surface: const Color(0xFFF8F9FA),
           background: const Color(0xFFF8F9FA),
         ),
         scaffoldBackgroundColor: const Color(0xFFF8F9FA),
         appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF009688),
+          backgroundColor: Color(0xFF6366F1),
           foregroundColor: Colors.white,
           elevation: 0,
           centerTitle: true,
@@ -53,14 +53,14 @@ class MyApp extends StatelessWidget {
           color: Colors.white,
         ),
         dataTableTheme: DataTableThemeData(
-          headingRowColor: WidgetStateProperty.all(const Color(0xFFE0F2F1)),
+          headingRowColor: WidgetStateProperty.all(const Color(0xFFEEF2FF)),
           headingTextStyle: GoogleFonts.outfit(
             fontWeight: FontWeight.bold, 
-            color: const Color(0xFF00695C),
+            color: const Color(0xFF4338CA), // Indigo 700
             fontSize: 14,
           ),
           dataRowColor: WidgetStateProperty.resolveWith((states) {
-             if (states.contains(WidgetState.selected)) return const Color(0xFFE0F2F1);
+             if (states.contains(WidgetState.selected)) return const Color(0xFFEEF2FF);
              return Colors.white;
           }),
           dividerThickness: 0.5,
@@ -80,17 +80,17 @@ class MyApp extends StatelessWidget {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12), 
-            borderSide: const BorderSide(color: Color(0xFF009688), width: 2),
+            borderSide: const BorderSide(color: Color(0xFF6366F1), width: 2),
           ),
           filled: true,
           fillColor: Colors.white,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           labelStyle: const TextStyle(color: Colors.grey),
-          prefixIconColor: const Color(0xFF009688),
+          prefixIconColor: const Color(0xFF6366F1),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF009688),
+            backgroundColor: const Color(0xFF6366F1),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -99,7 +99,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
         floatingActionButtonTheme: const FloatingActionButtonThemeData(
-          backgroundColor: Color(0xFF009688),
+          backgroundColor: Color(0xFF6366F1),
           foregroundColor: Colors.white,
           elevation: 4,
         ),

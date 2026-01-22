@@ -4,7 +4,7 @@ import 'shop_registration_screen.dart';
 
 /// Super Admin credentials
 const String kSuperAdminEmail = 'iamzainofficial4211@gmail.com';
-const String kSuperAdminPassword = 'admin@stockify2024';
+const String kSuperAdminPassword = 'admin@billingly2024';
 
 class OwnerLoginScreen extends ConsumerStatefulWidget {
   const OwnerLoginScreen({super.key});
@@ -69,10 +69,10 @@ class _OwnerLoginScreenState extends ConsumerState<OwnerLoginScreen> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.teal.shade50,
+                    color: const Color(0xFFEEF2FF),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.admin_panel_settings, size: 64, color: Colors.teal),
+                  child: const Icon(Icons.admin_panel_settings, size: 64, color: Color(0xFF6366F1)),
                 ),
                 const SizedBox(height: 24),
                 const Text(
@@ -81,7 +81,7 @@ class _OwnerLoginScreenState extends ConsumerState<OwnerLoginScreen> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Register new businesses in Stockify',
+                  'Register new businesses in Billingly',
                   style: TextStyle(color: Colors.grey),
                 ),
                 const SizedBox(height: 32),
@@ -90,13 +90,13 @@ class _OwnerLoginScreenState extends ConsumerState<OwnerLoginScreen> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.teal.shade50,
+                    color: const Color(0xFFEEF2FF),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.teal.shade200),
+                    border: Border.all(color: const Color(0xFFC7D2FE)),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.email, color: Colors.teal),
+                      const Icon(Icons.email, color: Color(0xFF6366F1)),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -104,7 +104,7 @@ class _OwnerLoginScreenState extends ConsumerState<OwnerLoginScreen> {
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
-                      const Icon(Icons.verified, color: Colors.teal),
+                      const Icon(Icons.verified, color: Color(0xFF6366F1)),
                     ],
                   ),
                 ),

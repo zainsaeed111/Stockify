@@ -170,7 +170,7 @@ class _DashboardHome extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final businessData = ref.watch(currentShopProvider);
-    final businessName = businessData?['shopName'] ?? 'Stockify';
+    final businessName = businessData?['shopName'] ?? 'Billingly';
     
     return Scaffold(
       appBar: AppBar(
@@ -203,7 +203,7 @@ class _DashboardHome extends ConsumerWidget {
                   childAspectRatio: 1.5,
                   physics: const NeverScrollableScrollPhysics(),
                   children: [
-                    _buildStatCard(context, 'Total Sales', 'PKR 25,400', Icons.attach_money, const Color(0xFF009688), const Color(0xFF4DB6AC)),
+                    _buildStatCard(context, 'Total Sales', 'PKR 25,400', Icons.attach_money, const Color(0xFF6366F1), const Color(0xFF818CF8)),
                     _buildStatCard(context, 'Low Stock', '12 Items', Icons.warning_amber_rounded, const Color(0xFFEF5350), const Color(0xFFE57373)),
                     _buildStatCard(context, 'Pending Orders', '5', Icons.shopping_cart_outlined, const Color(0xFFFF9800), const Color(0xFFFFB74D)),
                     _buildStatCard(context, 'Active Users', '3', Icons.people_outline, const Color(0xFF2196F3), const Color(0xFF64B5F6)),

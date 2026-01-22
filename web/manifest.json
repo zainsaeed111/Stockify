@@ -1,11 +1,11 @@
 {
-    "name": "Stockify",
-    "short_name": "Stockify",
+    "name": "Billingly",
+    "short_name": "Billingly",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "A premium billing and inventory management system.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

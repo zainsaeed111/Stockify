@@ -66,7 +66,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '823797210476',
     projectId: 'zainsaeed-ff6ec',
     storageBucket: 'zainsaeed-ff6ec.firebasestorage.app',
-    iosBundleId: 'com.example.stockify',
+    iosBundleId: 'com.example.billingly',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(

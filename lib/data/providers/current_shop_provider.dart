@@ -29,7 +29,7 @@ final currentShopProvider = NotifierProvider<CurrentShopNotifier, Map<String, dy
 extension ShopProviderExtensions on WidgetRef {
   Map<String, dynamic>? get currentShop => watch(currentShopProvider);
   
-  String get shopName => currentShop?['shopName'] ?? 'Stockify Pharmacy';
+  String get shopName => currentShop?['shopName'] ?? 'Billingly';
   String get shopOwnerName => currentShop?['ownerName'] ?? '';
   String get shopPhone => currentShop?['phone'] ?? '';
   String get shopEmail => currentShop?['email'] ?? '';

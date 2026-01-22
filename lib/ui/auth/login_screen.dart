@@ -99,9 +99,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.local_pharmacy, size: 64, color: Colors.teal),
+                    const Icon(Icons.receipt_long, size: 64, color: Color(0xFF6366F1)),
                     const SizedBox(height: 16),
-                    const Text('Stockify', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.teal)),
+                    const Text('Billingly', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF6366F1))),
                     const SizedBox(height: 8),
                     const Text('Business Owner Login', style: TextStyle(color: Colors.grey)),
                     const SizedBox(height: 32),
@@ -151,7 +151,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
                   ),
                   child: IconButton(
-                    icon: const Icon(Icons.admin_panel_settings, color: Colors.teal, size: 28),
+                    icon: const Icon(Icons.admin_panel_settings, color: Color(0xFF6366F1), size: 28),
                     tooltip: 'Super Admin',
                     onPressed: () {
                       Navigator.push(context, MaterialPageRoute(builder: (_) => const OwnerLoginScreen()));
@@ -159,7 +159,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text('Admin', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.teal)),
+                const Text('Admin', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF6366F1))),
               ],
             ),
           ),
