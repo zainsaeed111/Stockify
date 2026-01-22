@@ -407,6 +407,24 @@ class _MedicinesScreenState extends ConsumerState<MedicinesScreen> {
                 
                 const SizedBox(height: 12),
                 
+                if (medicine.description != null && medicine.description!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12.0),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.amber.withOpacity(0.1)),
+                      ),
+                      child: Text(
+                        medicine.description!,
+                        style: TextStyle(fontSize: 12, color: Colors.grey.shade800, height: 1.4),
+                      ),
+                    ),
+                  ),
+
                 // 3. Pricing Row
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
